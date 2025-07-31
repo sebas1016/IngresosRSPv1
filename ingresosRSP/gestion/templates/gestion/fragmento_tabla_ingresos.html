@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+{% for ingreso in ingresos %}
+<tr data-id="{{ ingreso.id }}" onclick="openModal({{ ingreso.id }})">
+    <td>{{ ingreso.numero_ingreso }}</td>
+    <td>{{ ingreso.fecha_ingreso|date:"d/m/y"}}</td>
+    <td><span class="status {{ingreso.estado}}">{{ ingreso.get_estado_display }}</span></td>
+    <td>{{ ingreso.equipo.cliente.nombre }}</td>
+    <td>{{ ingreso.equipo.marca }} {{ ingreso.equipo.modelo }}</td>
+    <td class="text-center">
+        {% if ingreso.es_garantia %}
+            <span class="garantia-badge">GARANTÍA</span>
+        {% endif %}
+    </td>
+    <td><a href="{% url 'detalle_ingreso' numero_ingreso=ingreso.numero_ingreso %}">Ver</a></td>
+</tr>
+{% empty %}
+<tr><td colspan="6">No se encontraron resultados</td></tr>
+{% endfor %}

@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="{% static 'images/logo.ico' %}">
+    <title>Informe Técnico</title>
+     <style>
+        body {
+            font-family: "Arial", sans-serif;
+            margin: 2cm;
+            color: #333;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            font-size: 24px;
+            text-transform: uppercase;
+            border-bottom: 2px solid #555;
+            padding-bottom: 5px;
+        }
+
+        .seccion {
+            margin-top: 25px;
+        }
+
+        .seccion h2 {
+            font-size: 18px;
+            color: #2c3e50;
+            border-bottom: 1px solid #ccc;
+            margin-bottom: 10px;
+        }
+
+        .info-linea {
+            margin: 4px 0;
+        }
+
+        .info-linea strong {
+            width: 150px;
+            display: inline-block;
+        }
+
+        .tabla-repuestos {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        .tabla-repuestos th, .tabla-repuestos td {
+            border: 1px solid #999;
+            padding: 6px;
+            text-align: left;
+        }
+
+        footer {
+            margin-top: 40px;
+            text-align: center;
+            font-size: 12px;
+            color: #888;
+        }
+
+        .firma {
+            margin-top: 60px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .firma div {
+            width: 45%;
+            text-align: center;
+            border-top: 1px solid #333;
+            padding-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Informe Técnico</h1>
+        <p><strong>Número de Ingreso:</strong> {{ ingreso.numero_ingreso }}</p>
+        <p><strong>Fecha de Ingreso:</strong> {{ ingreso.fecha_ingreso|date:"d/m/Y" }}</p>
+    </header>
+
+    <div class="seccion">
+        <h2>Datos del Cliente</h2>  
+        <p class="info-linea"><strong>Nombre:</strong> {{ cliente.nombre }}</p>
+        <p class="info-linea"><strong>Celular:</strong> {{ cliente.celular }}</p>
+        <p class="info-linea"><strong>Barrio:</strong> {{ cliente.barrio }}</p>
+        <p class="info-linea"><strong>Referencia:</strong> {{ cliente.referencia }}</p>
+    </div>
+
+    <div class="seccion">
+        <h2>Datos del Equipo</h2>
+        <p class="info-linea"><strong>Marca:</strong> {{ equipo.marca }}</p>
+        <p class="info-linea"><strong>Modelo:</strong> {{ equipo.modelo }}</p>
+        <p class="info-linea"><strong>Serial:</strong> {{ equipo.serial }}</p>
+    </div>
+
+    <div class="seccion">
+        <h2>Tipo de Servicio</h2>
+        <p>{{ ingreso.get_estado_display }}</p>
+    </div>
+
+    <div class="seccion">
+        <h2>Reporte Técnico</h2>
+        <p><strong>Diagnóstico:</strong> {{ historial.diagnostico }}</p>
+        <p><strong>Solución:</strong> {{ historial.solucion }}</p>
+        <p><strong>Recomendaciones:</strong> {{ historial.recomendaciones }}</p>
+    </div>
+
+    {% if historial.repuestos_usados %}
+    <div class="seccion">
+        <h2>Repuestos Usados</h2>
+        <p>{{ historial.repuestos_usados|linebreaks }}</p>
+    </div>
+    {% endif %}
+
+    <div class="firma">
+        <div>Técnico Responsable</div>
+        <div>Firma del Cliente</div>
+    </div>
+
+    <footer>
+        Generado automáticamente por el sistema de gestión del taller.
+    </footer>
+</body>
+</html>

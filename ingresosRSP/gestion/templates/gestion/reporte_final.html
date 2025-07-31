@@ -1,0 +1,77 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Informe Técnico - {{ ingreso.numero_ingreso }}</title>
+    <link rel="stylesheet" href="{% static 'gestion/style.css' %}">
+    <link rel="icon" type="image/x-icon" href="{% static 'images/logo.ico' %}">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+        }
+        h2 {
+            text-align: center;
+            text-transform: uppercase;
+        }
+        .seccion {
+            margin-bottom: 30px;
+        }
+        label {
+            font-weight: bold;
+        }
+        input, textarea, select {
+            width: 100%;
+            padding: 8px;
+            margin-top: 6px;
+            margin-bottom: 12px;
+            box-sizing: border-box;
+        }
+        button {
+            padding: 10px 20px;
+        }
+    </style>
+</head>
+<body>
+    <h2>Informe Tecnico</h2>
+    <div class="seccion">
+        <p><strong>Ingreso N°:</strong> {{ ingreso.numero_ingreso }}</p>
+        <p><strong>Fecha Ingreso:</strong>{{ ingreso.fecha_ingreso|date:"d/m/Y" }}</p>
+    </div>
+
+    <div class="seccion">
+        <h3>Datos del Cliente</h3>
+        <p><strong>Nombre:</strong> {{ cliente.nombre }}</p>
+        <p><strong>Celular:</strong> {{ cliente.celular }}</p>
+        <p><strong>Barrio:</strong> {{ cliente.barrio }}</p>
+    </div>
+
+    <div class="seccion">
+        <h3>Datos del Equipo</h3>
+        <p><strong>Marca:</strong> {{ equipo.marca }}</p>
+        <p><strong>Modelo:</strong> {{equipo.modelo }}</p>
+        <p><strong>Serial:</strong> {{ equipo.serial }}</p>
+    </div>
+
+    <div class="seccion">
+        <h3>Datos finales</h3>
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit">Guardar</button>
+        </form>
+    </div>
+    <!--
+    <div class="container">
+        <h2>Informe Ténico Final - Ingreso #{{ ingreso.numero_ingreso }}</h2>
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit">Guardar informe tecnico </button>
+        </form>
+        <br>
+        <a href="{% url 'detalle_ingreso' ingreso.numero_ingreso %}"></a>
+    </div>-->
+</body>
+</html>

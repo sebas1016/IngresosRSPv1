@@ -1,0 +1,53 @@
+
+<head>
+    <title>Búsqueda de equipos</title>
+    
+</head>
+<body>
+    <a href="{% url 'inicio' %}"><h2>Buscar equipos</h2></a>
+    <form method="GET">
+        {{ form.as_p }}
+        <button type="submit">Buscar</button>
+
+    </form>
+    <a href="{% url 'ingreso_equipo'%}"><button type="button">Atras</button></a>
+    <a href="{% url 'inicio' %}">Inicio</a>
+    {%if resultados %}
+    <h3>Resultados</h3>
+    <table border="1">
+        <thead>
+            <tr>
+                <th># Ingreso</th>
+                <th>Fecha Ingreso</th>
+                <th>Cliente</th>
+                <th>Celular</th>
+                <th>Marca</th>
+                <th>Modelo</th>
+                <th>Serial</th>
+                <th>Estado</th>
+                <th>Pago revision</th>
+                <th>ver</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for ingreso in resultados%}
+            <tr>
+                <td>{{ ingreso.numero_ingreso }}</td>
+                <td>{{ ingreso.fecha_ingreso|date:"d/m/Y" }}</td>
+                <td>{{ ingreso.equipo.cliente.nombre }}</td>
+                <td>{{ ingreso.equipo.cliente.celular }}</td>
+                <td>{{ ingreso.equipo.marca }}</td>
+                <td>{{ ingreso.equipo.modelo }}</td>
+                <td>{{ ingreso.equipo.serial }}</td>
+                <td>{{ ingreso.estado}}</td>
+                <td>{{ ingreso.paga_revision}}</td>
+                <td><a href="{% url 'detalle_ingreso' numero_ingreso=ingreso.numero_ingreso%}">Detalle</a></td> <!--Proximamente-->
+            </tr>
+            {% endfor %} 
+        </tbody>
+    </table>
+    {% elif form.is_bound %}
+        <p>No se encontraron resultados.</p>
+    {% endif %}
+</body>
+</html>

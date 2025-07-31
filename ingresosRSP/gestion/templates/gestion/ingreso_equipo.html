@@ -1,0 +1,77 @@
+{%load static%}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ingreso de equipo</title>
+    <link rel="stylesheet" href="{% static 'gestion/ingreso_style.css' %}">
+    <link rel="icon" type="image/x-icon" href="{% static 'images/logo.ico' %}">
+</head>
+<body>
+    <div class="container">
+        <h2>Ingreso de Equipo al taller <a href="{%url 'inicio'%}">Inicio</a></h2>
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <fieldset>
+                <legend>Datos del Cliente</legend>
+                <div class="form-section">{{ cliente_form.as_p }}</div>
+            </fieldset>
+
+            <fieldset>
+                <legend>Datos del Equipo</legend>
+                <div class="form-section">{{ equipo_form.as_p }}</div>
+            </fieldset>
+
+            <fieldset>
+                <legend>Ingreso</legend>
+                <div class="form-section">{{ ingreso_form.as_p }}</div>
+            </fieldset>
+            <fieldset>
+                <legend>Imagenes del equipo</legend>
+                <div class="form-section">
+                    <label for="imagenes">Selecciona una o más imágenes:</label>
+                    <input type="file" name="imagenes" id="imagenes" multiple>
+                </div>
+            </fieldset>
+            <button type="submit">Guardar</button>
+        </form>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const garantiaCheckbox = document.getElementById('id_es_garantia');
+            const alertaGarantia = document.getElementById('alerta-garantia');
+            const form = document.querySelector('form');
+
+            function toggleAlerta() {
+                if (garantiaCheckbox.checked) {
+                    alertaGarantia.style.display = 'block';
+                    document.getElementById("checkbox-section").classList.add('garantia-activa');
+                } else {
+                    alertaGarantia.style.display = 'none';
+                    document.getElementById("checkbox-section").classList.remove('garantia-activa');
+                }
+            }
+
+            garantiaCheckbox.addEventListener('change', toggleAlerta);
+            toggleAlerta();
+
+            form.addEventListener('submit', function (e) {
+                const confirmMsg = garantiaCheckbox.checked
+                    ? "¿Estás seguro de continuar? Está marcado como garantía."
+                    : "¿Estás seguro de continuar?";
+                if (!confirm(confirmMsg)) {
+                    e.preventDefault();
+                }
+            });
+        });
+        document.querySelector("form").addEventListener("submit", function() {
+            const btn = document.querySelector("button[type='submit']");
+            btn.disabled = true;
+            btn.innerText = "Guardando...";
+        });
+    </script>
+</body>
+</html>
