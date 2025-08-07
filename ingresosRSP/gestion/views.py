@@ -29,7 +29,7 @@ def generar_numero_ingreso():
         return f"{base}{contador.ultimo_numero:03}"
 
 # Create your views here.
-@login_required
+
 def ingreso_equipo(request):
     if request.method == 'POST':
         cliente_form = ClienteForm(request.POST)
@@ -65,7 +65,6 @@ def ingreso_equipo(request):
                     ingreso = ingreso_form.save(commit=False)
                     ingreso.numero_ingreso = generar_numero_ingreso()
                     ingreso.equipo = equipo
-                    ingreso.recibido_por = request.user
 
                     if ingreso.es_garantia:
                         ingreso.estado = 'garantia'
@@ -98,7 +97,7 @@ def ingreso_equipo(request):
         'ingreso_form': ingreso_form,
         })
     
-@login_required
+
 def buscar_equipo(request):
     resultados = []
     form = BusquedaForm(request.GET or None)
@@ -116,7 +115,7 @@ def buscar_equipo(request):
         'resultados': resultados
     })
 
-@login_required
+
 def detalle_ingreso(request, numero_ingreso):
     ingreso = get_object_or_404(Ingreso, numero_ingreso=numero_ingreso)
     equipo = ingreso.equipo
@@ -153,7 +152,6 @@ def detalle_ingreso(request, numero_ingreso):
         'form':form,
     })
 
-@login_required
 def listar_ingresos(request):
     estado_filtrado = request.GET.get('estado')
     busqueda = request.GET.get('query')
@@ -177,7 +175,6 @@ def listar_ingresos(request):
         'busqueda':busqueda
     })
 
-@login_required
 def buscar_ingresos_api(request):
     busqueda = request.GET.get('query','')
     estado = request.GET.get('estado','')
@@ -194,10 +191,9 @@ def buscar_ingresos_api(request):
         )
     html = render_to_string('gestion/fragmento_tabla_ingresos.html', {'ingresos':ingresos})
     return JsonResponse({'html':html})  
-  
-@login_required      
+      
 def ingreso_detalle_api(request, ingreso_id):
-    ingreso = get_object_or_404(Ingreso.objects.select_related('equipo__cliente', 'recibido_por'), id=ingreso_id)
+    ingreso = get_object_or_404(Ingreso.objects.select_related('equipo__cliente'), id=ingreso_id)
     historial = HistorialEquipo.objects.filter(ingreso=ingreso).select_related('realizado_por').order_by('fecha')
     
     data = {
@@ -206,12 +202,11 @@ def ingreso_detalle_api(request, ingreso_id):
         'descripcion_dano': ingreso.descripcion_dano,
         'paga_revision': ingreso.paga_revision,
         'estado': ingreso.estado,
-        'recibido_por': ingreso.recibido_por.get_full_name() or ingreso.recibido_por.username if ingreso.recibido_por else "—",
+        'recibido_por': ingreso.get_recibido_por_display(),
         'es_garantia': ingreso.estado == 'garantia',
         'cliente': {
             'nombre': ingreso.equipo.cliente.nombre,
             'celular': ingreso.equipo.cliente.celular,
-            'barrio': ingreso.equipo.cliente.barrio,
             'referencia': ingreso.equipo.cliente.referencia,
         },
         'equipo': {
@@ -248,12 +243,11 @@ def actualizar_ingreso_api(request, ingreso_id):
 
     return JsonResponse({'success': True})
 
-@login_required
+
 def inicio(request):
     return render(request, 'gestion/inicio.html')
 
 #Reporte Tecnico (PDF)
-@login_required
 def reporte_final(request, numero_ingreso):
     ingreso = get_object_or_404(Ingreso, numero_ingreso=numero_ingreso)
     equipo = ingreso.equipo
@@ -342,7 +336,6 @@ def generar_pdf_ingreso(request, ingreso_id):
     response['Content-Disposition'] = f'attachment; filename=ingreso_{ingreso.numero_ingreso}.pdf'
     return response
 
-@login_required
 def ingreso_exitoso(request, ingreso_id):
     ingreso = get_object_or_404(Ingreso, id=ingreso_id)
     return render(request, 'gestion/ingreso_exitoso.html', {

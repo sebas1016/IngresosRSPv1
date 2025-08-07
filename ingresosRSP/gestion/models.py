@@ -12,6 +12,12 @@ ESTADOS_CJOICES = [
     ('garantia', 'Garantía'),
 ]
 
+RECIBIDO_POR_CHOICES = [
+    ('alavaro', 'Alvaro Caballero'),
+    ('sebastian', 'Sebastián Berrio'),
+    ('juan', 'Juan Carlos'),
+]
+
 class Cliente(models.Model):
     nombre = models.CharField(max_length=100)
     celular = models.CharField(max_length=25)
@@ -38,7 +44,7 @@ class Ingreso(models.Model):
     fecha_ingreso = models.DateTimeField(auto_now_add=True)
     descripcion_dano = models.TextField()
     paga_revision = models.BooleanField(default=False)
-    recibido_por = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    recibido_por = models.CharField(max_length=30, choices=RECIBIDO_POR_CHOICES, default='alvaro')
     estado = models.CharField(max_length=20, choices=ESTADOS_CJOICES, default='pendiente')
     numero_ingreso = models.CharField(max_length=10, unique=True, editable=False, blank=True)
     es_garantia = models.BooleanField(default=False)

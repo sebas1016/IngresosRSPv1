@@ -28,14 +28,20 @@ class EquipoForm(forms.ModelForm):
         }
     
 class IngresoForm(forms.ModelForm):
+    
     class Meta:
         model = Ingreso
-        fields = ['descripcion_dano', 'paga_revision', 'es_garantia']
+        fields = ['descripcion_dano', 'recibido_por', 'paga_revision', 'es_garantia']
         widgets = {
             'descripcion_dano': forms.Textarea(attrs={
                 'placeholder': 'Describa el daño o motivo del ingreso',
                 'rows': 3
             }),
+        }
+        
+        labels = {
+            'recibido_por': 'Recibido por',
+            'descripcion_dano': 'Descripción Daño',
         }
 class BusquedaForm(forms.Form):
     query = forms.CharField(label='Buscar por nombre, celular o serial', max_length=100)
