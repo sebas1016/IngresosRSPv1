@@ -93,8 +93,17 @@
             font-weight: 600;
             text-transform: uppercase;
         }
+        
+        .status.devolucion {
+            background-color: red;
+            color: white;
+        }
 
-        .status.pendiente {
+        .status.revisado {
+            background-color: #00b894;
+            color: white;
+        }
+        .status.pendiente { 
             background-color: #ffeaa7;
             color: #d63031;
         }

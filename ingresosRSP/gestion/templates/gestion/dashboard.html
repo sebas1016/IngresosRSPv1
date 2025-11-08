@@ -1,0 +1,45 @@
+{%load static%}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DashBoard</title>
+    <link rel="stylesheet" href="{% static 'gestion/ingreso_style.css' %}">
+    <link rel="icon" type="image/x-icon" href="{% static 'images/logo.ico' %}">
+</head>
+<body>
+    <div class="container mt-4">
+    <h2 class="mb-4">Dashboard del Taller</h2>
+
+    <div class="row">
+        <div class="col-md-3 mb-3">
+            <div class="card text-bg-primary text-center p-3">
+                <h4>{{ total_ingresos }}</h4>
+                <p class="mb-0">Ingresos Totales</p>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="card text-bg-warning text-center p-3">
+                <h4>{{ activos }}</h4>
+                <p class="mb-0">Activos</p>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="card text-bg-success text-center p-3">
+                <h4>{{ entregados }}</h4>
+                <p class="mb-0">Entregados</p>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="card text-bg-danger text-center p-3">
+                <h4>{{ garantias }}</h4>
+                <p class="mb-0">Garantías</p>
+            </div>
+        </div>
+    </div>
+</div>
+</body>

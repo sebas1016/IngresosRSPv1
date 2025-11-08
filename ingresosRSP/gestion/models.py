@@ -6,16 +6,19 @@ from django.db import IntegrityError
 # Create your models here.
 ESTADOS_CJOICES = [
     ('pendiente', 'Pendiente por revisión'),
+    ('revisado', 'Revisado'),
     ('reparacion', 'En reparación'),
     ('reparado', 'Reparado'),
     ('entregado', 'Entregado'),
+    ('devolucion', 'Devolución'),
     ('garantia', 'Garantía'),
 ]
 
 RECIBIDO_POR_CHOICES = [
-    ('alavaro', 'Alvaro Caballero'),
+    ('alvaro', 'Alvaro Caballero'),
     ('sebastian', 'Sebastián Berrio'),
     ('juan', 'Juan Carlos'),
+    ('david', 'David Chavarria'),
 ]
 
 class Cliente(models.Model):
@@ -44,7 +47,7 @@ class Ingreso(models.Model):
     fecha_ingreso = models.DateTimeField(auto_now_add=True)
     descripcion_dano = models.TextField()
     paga_revision = models.BooleanField(default=False)
-    recibido_por = models.CharField(max_length=30, choices=RECIBIDO_POR_CHOICES, default='alvaro')
+    recibido_por = models.CharField(max_length=30, choices=RECIBIDO_POR_CHOICES, default='david')
     estado = models.CharField(max_length=20, choices=ESTADOS_CJOICES, default='pendiente')
     numero_ingreso = models.CharField(max_length=10, unique=True, editable=False, blank=True)
     es_garantia = models.BooleanField(default=False)

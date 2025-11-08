@@ -50,14 +50,16 @@
         
         <!-- Filtros -->
         <div class="filtros">
-            <input type="text" id="busqueda" placeholder="Buscar por nombre, celular o número...">
+            <input type="text" id="busqueda" placeholder="Buscar por nombre, celular, modelo o número...">
             <label for="estadoFiltro">Filtrar por estado:</label>
             <select id="estadoFiltro">
                 <option value="">--Todos--</option>
                 <option value="pendiente">Pendiente por revisión</option>
+                <option value="revisado">Revisado</option>
                 <option value="reparacion">En reparación</option>
                 <option value="reparado">Reparado</option>
                 <option value="entregado">Entregado</option>
+                <option value="devolucion">Devolución</option>
                 <option value="garantia">Garantía</option>
             </select>
         </div>
@@ -166,8 +168,10 @@
                             <select id="estado_ingreso" name="estado">
                                 <option value="pendiente">Pendiente por revisión</option>
                                 <option value="reparacion">En reparación</option>
+                                <option value="revisado">Revisado</option>
                                 <option value="reparado">Reparado</option>
                                 <option value="entregado">Entregado</option>
+                                <option value="devolucion">Devolución</option>
                                 <option value="garantia">Garantía</option>
                             </select>
                         </div>
@@ -374,8 +378,10 @@
             const estados = {
                 'pendiente': 'Pendiente',
                 'reparacion': 'En Reparación',
+                'revisado': 'Revisado',
                 'reparado': 'Reparado',
                 'entregado': 'Entregado',
+                'devolucion': 'Devolución',
                 'garantia': 'Garantía'
             };
             return estados[estado] || estado;

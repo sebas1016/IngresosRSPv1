@@ -11,14 +11,14 @@ class ClienteForm(forms.ModelForm):
             'nombre': forms.TextInput(attrs={'placeholder': 'Nombre completo'}),
             'celular': forms.TextInput(attrs={'placeholder': 'Celular'}),
             #'barrio': forms.TextInput(attrs={'placeholder': 'Barrio'}),
-            'referencia': forms.TextInput(attrs={'placeholder': 'Referencia o punto de referencia'}),
+            'referencia': forms.TextInput(attrs={'placeholder': 'Referencia o punto de referencia', 'list': 'referencia'}),
         }
 class EquipoForm(forms.ModelForm):
     class Meta:
         model = Equipo
         fields = ['marca', 'modelo', 'serial', 'descripcion_general']
         widgets = {
-            'marca': forms.TextInput(attrs={'placeholder': 'Marca del equipo'}),
+            'marca': forms.TextInput(attrs={'placeholder': 'Marca del equipo', 'list': 'marcas'}),
             'modelo': forms.TextInput(attrs={'placeholder': 'Modelo'}),
             'serial': forms.TextInput(attrs={'placeholder': 'Serial'}),
             'descripcion_general': forms.Textarea(attrs={
@@ -44,7 +44,7 @@ class IngresoForm(forms.ModelForm):
             'descripcion_dano': 'Descripción Daño',
         }
 class BusquedaForm(forms.Form):
-    query = forms.CharField(label='Buscar por nombre, celular o serial', max_length=100)
+    query = forms.CharField(label='Buscar por nombre, celular, modelo o serial', max_length=100)
     
 class HistorialForm(forms.ModelForm):
     class Meta:

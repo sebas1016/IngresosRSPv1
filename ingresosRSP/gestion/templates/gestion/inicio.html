@@ -1,24 +1,3 @@
-<!--{% load static %}
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Inicio - Ingresos RSP </title>
-    <link rel="stylesheet" href="{% static 'gestion/style.css' %}">
-</head>
-<body>
-    <div class="container">
-        <h1>📋 Sistema de Gestión de Ingresos </h1>
-        <p>Bienvenido {{ request.user.get_full_name|default:request.user.username }}, este sistema permite gestionar los equipos ingresados al taller RSP.</p>
-         <ul>
-            <li><a href="{% url 'ingreso_equipo'%}">➕ Ingresar nuevo equipo</a></li>
-            <li><a href="{% url 'buscar_equipo'%}">🔍 Buscar equipo</a></li>
-            <li><a href="{% url 'listar_ingresos'%}">📂 Listar todos los ingresos</a></li>
-            <li><a href="{% url 'logout'%}"></a>🚪 Cerrar sesión</li>
-         </ul>
-    </div>
-</body>
-</html> -->
 {% load static %}
 <!DOCTYPE html>
 <html lang="es">
@@ -72,6 +51,12 @@
                         <span class="icon">📂</span>
                         <span class="title">Listar Ingresos</span>
                         <span class="description">Ver todos los equipos registrados</span>
+                    </a>
+
+                    <a class="menu-item listar" href="{% url 'dashboard' %}">
+                        <span class="icon"> <img src="{% static 'images/dashboard.png' %}" width="100"> </span>
+                        <span class="title">Dashboard</span>
+                        <span class="description">Ver estadisticas</span>
                     </a>
                 </div>
             </nav>

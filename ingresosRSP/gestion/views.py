@@ -49,15 +49,21 @@ def ingreso_equipo(request):
                 
             )
             #Buscar o crear equipo
+            # Buscar o crear equipo
+            marca = equipo_form.cleaned_data['marca']
+            if marca == 'Otra':
+                marca = request.POST.get('marca_otro')
+
             equipo, creado = Equipo.objects.get_or_create(
                 cliente=cliente,
-                marca=equipo_form.cleaned_data['marca'],
+                marca=marca,
                 modelo=equipo_form.cleaned_data['modelo'],
                 serial=equipo_form.cleaned_data['serial'],
                 defaults={
                     'descripcion_general': equipo_form.cleaned_data['descripcion_general']
                 }
             )
+
             
             #Crear nuevo ingreso
             try:
@@ -107,7 +113,9 @@ def buscar_equipo(request):
         resultados = Ingreso.objects.filter(
             Q(equipo__serial__icontains=query) |
             Q(equipo__cliente__nombre__icontains=query) |
-            Q(equipo__cliente__celular__icontains=query)
+            Q(equipo__cliente__celular__icontains=query) |
+            Q(equipo__modelo__icontains=query) |
+            Q(equipo__marca__icontains=query)
         ).select_related('equipo', 'equipo__cliente')
     
     return render(request, 'gestion/busqueda.html',{
@@ -164,7 +172,9 @@ def listar_ingresos(request):
         ingresos = ingresos.filter(
             Q(numero_ingreso__icontains=busqueda) | 
             Q(equipo__cliente__nombre__icontains=busqueda) |
-            Q(equipo__cliente__celular__icontains=busqueda)
+            Q(equipo__cliente__celular__icontains=busqueda) |
+            Q(equipo__modelo__icontains=busqueda) |
+            Q(equipo__marca__icontains=busqueda)
         )
     else:
         ingresos = Ingreso.objects.all().order_by('-fecha_ingreso')
@@ -187,7 +197,9 @@ def buscar_ingresos_api(request):
         ingresos = ingresos.filter(
             Q(numero_ingreso__icontains=busqueda) |
             Q(equipo__cliente__nombre__icontains=busqueda) |
-            Q(equipo__cliente__celular__icontains=busqueda) 
+            Q(equipo__cliente__celular__icontains=busqueda) |
+            Q(equipo__modelo__icontains=busqueda) |
+            Q(equipo__marca__icontains=busqueda)
         )
     html = render_to_string('gestion/fragmento_tabla_ingresos.html', {'ingresos':ingresos})
     return JsonResponse({'html':html})  
@@ -357,6 +369,7 @@ def registro_usuario(request):
     return render(request, 'gestion/registro.html', {'form': form}) 
 
 def login_personalizado(request):
+    
     if request.method == 'POST':
         form = AuthenticationForm(request, data=request.POST)
         if form.is_valid():
@@ -369,3 +382,20 @@ def login_personalizado(request):
     else:
         form = AuthenticationForm()
     return render(request, 'gestion/login.html', {'form': form})
+
+def dashboard(request):
+    total_ingresos = Ingreso.objects.count()
+    activos = Ingreso.objects.exclude(estado='entregado').count()
+    entregados = Ingreso.objects.filter(estado='entregado').count()
+    garantias = Ingreso.objects.filter(es_garantia=True).count()
+    
+    context = {
+        'total_ingresos': total_ingresos,
+        'activos': activos,
+        'entregados': entregados,
+        'garantias': garantias,
+    }
+    
+    return render(request, 'gestion/dashboard.html', context)
+
+    
