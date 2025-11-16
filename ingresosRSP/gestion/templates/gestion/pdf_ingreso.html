@@ -5,12 +5,11 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Informe Ingreso {{ ingreso.numero_ingreso }}</title>
-    <link rel="icon" type="image/x-icon" href="{% static 'images/logo.ico' %}">
-  <style>
+    <style>
     body {
         font-family: "Arial", sans-serif;
         margin: 0;
-        padding: 0;
+        padding: 0px;
         color: #333;
         position: relative;
     }
@@ -32,7 +31,7 @@
     }
 
     /* Logo en esquina superior izquierda */
-    .logo-header {
+    .logo-header { 
         position: absolute;
         top: 10px;
         left: 20px;
@@ -47,7 +46,7 @@
         text-align: center;
         margin-bottom: 30px;
         position: relative;
-        padding-top: 90px; /* Espacio suficiente para el logo */
+        padding-top: 90px;
         padding-left: 20px;
         padding-right: 20px;
     }
@@ -61,8 +60,11 @@
         margin-bottom: 0.5rem;
     }
 
+    /* Secciones con títulos destacados */
     .seccion {
-        margin-top: 25px;
+        margin-top: 20px;
+        margin-bottom: 20px;
+        page-break-inside: avoid;
     }
 
     .seccion h2 {
@@ -70,78 +72,78 @@
         color: #2c3e50;
         border-bottom: 1px solid #ccc;
         margin-bottom: 10px;
+        
     }
 
-    .info-linea {
-        margin: 4px 0;
+    /* Información en formato línea por línea */
+    .info-item {
+        margin: 8px 0;
+        padding-left: 15px;
+        line-height: 1.6;
     }
 
-    .info-linea strong {
-        width: 150px;
-        display: inline-block;
+    .info-item strong {
+        font-weight: bold;
+        color: #2c3e50;
+    }
+
+    .info-item span {
+        color: #555;
     }
 
     footer {
         margin-top: 40px;
         text-align: center;
-        font-size: 12px;
+        font-size: 11px;
         color: #888;
-    }
-
-    .firma {
-        margin-top: 60px;
-        display: flex;
-        justify-content: space-between;
-    }
-
-    .firma div {
-        width: 45%;
-        text-align: center;
-        border-top: 1px solid #333;
-        padding-top: 5px;
-    }
-
-    .imagen {
-        margin: 20px auto;
-        text-align: center;
-    }
-
-    .imagen img {
-        max-width: 250px;
-        max-height: 250px;
-        width: auto;
-        height: auto;
-        border: 1px solid #aaa;
-        border-radius: 6px;
-        padding: 4px;
-        box-shadow: 0 0 5px rgba(0,0,0,0.1);
-    }
-
-    .imagen p {
-        font-size: 0.9em;
-        color: #666;
-        margin-top: 6px;
+        page-break-inside: avoid;
     }
 
     .galeria-imagenes {
         display: flex;
-        flex-wrap: nowrap;
-        gap: 8px;
+        flex-wrap: wrap;
+        gap: 12px;
         justify-content: flex-start;
-        align-items: center;
-        overflow: hidden;
-        margin-top: 10px;
+        align-items: flex-start;
+        margin-top: 15px;
+    }
+
+    .miniatura {
+        flex: 0 0 auto;
+        text-align: center;
     }
 
     .miniatura img {
         width: 100px;
-        height: auto;
-        border: 1px solid #ccc;
-        border-radius: 4px;
+        height: 100px;
+        object-fit: cover;
+        border: 2px solid #ddd;
+        border-radius: 6px;
+        display: block;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .miniatura p {
+        font-size: 10px;
+        margin-top: 4px;
+        color: #666;
+    }
+
+    .aviso-importante {
+        margin-top: 30px;
+        padding: 15px;
+        background-color: #fff3cd;
+        border: 2px solid #ffc107;
+        border-radius: 5px;
+        text-align: center;
+    }
+
+    .aviso-importante strong {
+        color: #d63031;
+        font-size: 13px;
         display: block;
     }
 
-    /* Marca de agua alternativa con texto */
     .marca-agua-texto {
         position: fixed;
         top: 50%;
@@ -155,61 +157,97 @@
         opacity: 0.03;
         white-space: nowrap;
     }
+
+    .header-info {
+        text-align: center;
+        margin-bottom: 10px;
+    }
+
+    .header-info p {
+        margin: 5px 0;
+        font-size: 14px;
+    }
+
+    .numero-ingreso {
+        color: #e74c3c;
+        font-weight: bold;
+        font-size: 16px;
+    }
 </style>
 </head>
 <body>
     <!-- Logo en esquina superior izquierda -->
     <div class="logo-header"></div>
 
-    <!-- Marca de agua de texto alternativa -->
+    <!-- Marca de agua de texto -->
     <div class="marca-agua-texto">SERVICIO TÉCNICO RSP MEDELLÍN</div>
 
     <header>
-        <h1>Informe Técnico</h1>
-        <div style="text-align: center;">
-            <p style="margin: 0; margin-bottom: 5px;">
+        <h1>Informe Técnico de Ingreso</h1>
+        <div class="header-info">
+            <p>
                 <strong>Número de Ingreso:</strong>
-                <span style="color: red; font-weight: bold;">#{{ ingreso.numero_ingreso }}</span>
-                <strong> | Fecha de Ingreso:</strong> {{ ingreso.fecha_ingreso|date:"d/m/Y" }}
+                <span class="numero-ingreso">#{{ ingreso.numero_ingreso }}</span>
+                <strong>| Fecha de Ingreso:</strong> {{ ingreso.fecha_ingreso|date:"d/m/Y H:i" }}
             </p>
-            <p style="margin: 0; text-align: center;">
+            <p>
                 <strong>Recibido por:</strong> {{ ingreso.get_recibido_por_display }}
             </p>
         </div>
     </header>
 
-
     <div class="seccion">
-        <h2>Cliente</h2>
+        <h2>Información del Cliente</h2>
         <p><strong>Nombre:</strong> {{ cliente.nombre }}</p>
         <p><strong>Celular:</strong> {{ cliente.celular }}</p>
         <p><strong>Referencia:</strong> {{ cliente.referencia }}</p>
     </div>
 
     <div class="seccion">
-        <h2>Equipo</h2>
-        <p><strong>Marca:</strong> {{ equipo.marca}}</p>
+        <h2>Información del Equipo</h2>
+        <p><strong>Marca:</strong> {{ equipo.marca }}</p>
         <p><strong>Modelo:</strong> {{ equipo.modelo }}</p>
-        <p><strong>Serial:</strong> {{ equipo.serial }}</p>
-        <p><strong>Descripción General:</strong> {{equipo.descripcion_general}}</p>
+        <p><strong>Serial:</strong> {{ equipo.serial|default:"Sin serial" }}</p>
+        <p><strong>Descripción General:</strong> {{ equipo.descripcion_general|default:"N/A" }}</p>
         <p><strong>Descripción del daño:</strong> {{ ingreso.descripcion_dano }}</p>
     </div>
 
-    {% if imagenes %}
-        <div class="seccion">
-            <h2>Imagenes de ingreso</h2>
-            <div class="galeria-imagenes">
-                {% for img in imagenes %}
-                    <div class="miniatura">
-                        <img src="{{ img.ruta }}">
-                    </div>
-                {% endfor %}
+    {% if imagenes_serial %}
+    <div class="seccion">
+        <h2>Imágenes del Serial</h2>
+        <div class="galeria-imagenes">
+            {% for img in imagenes_serial %}
+            <div class="miniatura">
+                <img src="{{ img.ruta }}" alt="Serial del equipo">
             </div>
+            {% endfor %}
         </div>
+    </div>
     {% endif %}
 
+    {% if imagenes %}
+    <div class="seccion">
+        <h2>Imágenes de Ingreso</h2>
+        <div class="galeria-imagenes">
+            {% for img in imagenes %}
+            <div class="miniatura">
+                <img src="{{ img.ruta }}" alt="Imagen de ingreso">
+                {% if img.descripcion %}
+                <p>{{ img.descripcion }}</p>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="aviso-importante">
+        <strong>⚠️ IMPORTANTE: Información de diagnóstico en 5 a 10 días hábiles</strong>
+    </div>
+
     <footer>
-        Generado automáticamente por el sistema de gestión del taller.
+       <p>&copy; Generado automáticamente por el sistema de gestión del taller.</p>
+       <p>Fecha de generación: {% now "d/m/Y H:i" %}</p>
     </footer>
 </body>
 </html>

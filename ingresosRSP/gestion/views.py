@@ -1,9 +1,9 @@
 from django.conf import settings
 from django.http import HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
-from .forms import ClienteForm, EquipoForm, IngresoForm, BusquedaForm
-from .models import Cliente, Equipo, ImagenHistorial, ImagenIngreso, Ingreso, HistorialEquipo,ContadorIngreso
-from django.db.models import Q
+from .forms import ClienteForm, EquipoForm, IngresoForm
+from .models import Cliente, Equipo, ImagenHistorial, ImagenIngreso, Ingreso, HistorialEquipo,ContadorIngreso, ImagenSerial
+from django.db.models import Q, Count, F
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.template.loader import render_to_string
@@ -14,8 +14,12 @@ from weasyprint import HTML
 from django.db import IntegrityError, transaction
 from django.utils.timezone import now
 from gestion.models import Ingreso
-from django.contrib.auth import login, authenticate
+from django.contrib.auth import login
 from django.contrib.auth.forms import AuthenticationForm
+from datetime import timedelta
+from django.utils.dateparse import parse_date
+from django.views.decorators.http import require_http_methods
+from django.db.models.functions import TruncMonth
 
 def generar_numero_ingreso():
     año = now().year % 100
@@ -78,17 +82,21 @@ def ingreso_equipo(request):
                         ingreso.estado = 'pendiente'
 
                     ingreso.save()
+            
+                    # Guardar Imágenes del Ingreso
+                    imagenes = request.FILES.getlist('imagenes')
+                    for img in imagenes:
+                        ImagenIngreso.objects.create(ingreso=ingreso, imagen=img)
+
+                    #Guardar imagenes del serial
+                    imagenes_serial = request.FILES.getlist('imagenes_serial')
+                    for img in imagenes_serial:
+                        ImagenSerial.objects.create(equipo=equipo, imagen=img)
+                        
             except IntegrityError:
-                return HttpResponse("Error al guardar el ingreso. Intenta de nuevo.", status=500)
+                return HttpResponse("Error al guardar el ingreso. Intenta de nuevo.", status=500)     
 
-            from pathlib import Path 
-
-        # Guardar Imágenes del Ingreso
-        imagenes = request.FILES.getlist('imagenes')
-        for img in imagenes:
-            ImagenIngreso.objects.create(ingreso=ingreso, imagen=img)
-
-        return redirect('ingreso_exitoso', ingreso_id=ingreso.id)
+            return redirect('ingreso_exitoso', ingreso_id=ingreso.id)
 
             #return redirect('ingreso_equipo')
             
@@ -104,32 +112,13 @@ def ingreso_equipo(request):
         })
     
 
-def buscar_equipo(request):
-    resultados = []
-    form = BusquedaForm(request.GET or None)
-    
-    if form.is_valid():
-        query = form.cleaned_data['query']
-        resultados = Ingreso.objects.filter(
-            Q(equipo__serial__icontains=query) |
-            Q(equipo__cliente__nombre__icontains=query) |
-            Q(equipo__cliente__celular__icontains=query) |
-            Q(equipo__modelo__icontains=query) |
-            Q(equipo__marca__icontains=query)
-        ).select_related('equipo', 'equipo__cliente')
-    
-    return render(request, 'gestion/busqueda.html',{
-        'form': form,
-        'resultados': resultados
-    })
-
-
 def detalle_ingreso(request, numero_ingreso):
     ingreso = get_object_or_404(Ingreso, numero_ingreso=numero_ingreso)
     equipo = ingreso.equipo
     cliente = ingreso.equipo.cliente
     historial = HistorialEquipo.objects.filter(ingreso=ingreso).order_by('-fecha')
     imagenes = ingreso.imagenes.all()
+    imagenes_serial = equipo.imagenes_serial.all()
     
     from .forms import HistorialForm
     
@@ -138,7 +127,7 @@ def detalle_ingreso(request, numero_ingreso):
         if form.is_valid():
             historial_item = form.save(commit=False)
             historial_item.ingreso = ingreso
-            historial_item.realizado_por = request.user
+            historial_item.realizado_por = None
             ingreso.estado = historial_item.estado
             ingreso.save()
             historial_item.save()
@@ -157,6 +146,7 @@ def detalle_ingreso(request, numero_ingreso):
         'cliente': cliente,
         'historial': historial,
         'imagenes': imagenes,
+        'imagenes_serial': imagenes_serial,
         'form':form,
     })
 
@@ -186,13 +176,21 @@ def listar_ingresos(request):
     })
 
 def buscar_ingresos_api(request):
+    """
+    API para buscar ingresos con filtros por estado, búsqueda y alertas
+    Las alertas ahora se basan en días hábiles (excluyendo fines de semana)
+    """
     busqueda = request.GET.get('query','')
     estado = request.GET.get('estado','')
+    alerta = request.GET.get('alerta','')
     
     ingresos = Ingreso.objects.select_related('equipo__cliente').order_by('-fecha_ingreso')
     
+    #Filtro por estado
     if estado:
         ingresos = ingresos.filter(estado=estado)
+    
+    #Filtro por busquda de texto
     if busqueda:
         ingresos = ingresos.filter(
             Q(numero_ingreso__icontains=busqueda) |
@@ -201,9 +199,63 @@ def buscar_ingresos_api(request):
             Q(equipo__modelo__icontains=busqueda) |
             Q(equipo__marca__icontains=busqueda)
         )
-    html = render_to_string('gestion/fragmento_tabla_ingresos.html', {'ingresos':ingresos})
+    
+    #Filtro por nivel de alerta
+    if alerta:
+        #Primero filtramos solo pendientes
+        ingresos = ingresos.filter(estado='pendiente')
+        
+        #Aplicamos el filtro de dias en python
+        #la logica de días hábiles es compleja para sql
+        ingresos_list = list(ingresos)
+        
+        if alerta == 'green':
+            ingresos_filtrados = [
+                ing for ing in ingresos_list
+                if ing.dias_en_taller() < 6
+            ]
+        elif alerta == 'con-alerta':
+            ingresos_filtrados = [
+                ing for ing in ingresos_list
+                if ing.dias_en_taller() >5 and ing.dias_en_taller() <=8
+            ]
+        elif alerta == 'critico':
+            ingresos_filtrados = [
+                ing for ing in ingresos_list
+                if ing.dias_en_taller() > 8
+            ]
+        else:
+            ingresos_filtrados=ingresos_list
+    
+        
+        html = render_to_string('gestion/fragmento_tabla_ingresos.html', {
+            'ingresos':ingresos_filtrados
+            })
+    else:
+        html = render_to_string('gestion/fragmento_tabla_ingresos.html', {
+            'ingresos':ingresos
+            })
     return JsonResponse({'html':html})  
-      
+
+def calcular_dias_habiles_entre_fechas(fecha_inicio, fecha_fin):
+    """
+    Calcula los días hábiles entre dos fechas (excluye sábados y domingos)
+    Útil para cálculos en vistas y reportes
+    """
+    from datetime import timedelta
+    
+    dias_habiles = 0
+    fecha_actual = fecha_inicio.date() if hasattr(fecha_inicio, 'date') else fecha_inicio
+    fecha_final = fecha_fin.date() if hasattr(fecha_fin, 'date') else fecha_fin
+    
+    while fecha_actual <= fecha_final:
+        # weekday(): 0=Lunes, 1=Martes, ..., 4=Viernes, 5=Sábado, 6=Domingo
+        if fecha_actual.weekday() < 5:
+            dias_habiles += 1
+        fecha_actual += timedelta(days=1)
+    
+    return max(0, dias_habiles - 1)
+   
 def ingreso_detalle_api(request, ingreso_id):
     ingreso = get_object_or_404(Ingreso.objects.select_related('equipo__cliente'), id=ingreso_id)
     historial = HistorialEquipo.objects.filter(ingreso=ingreso).select_related('realizado_por').order_by('fecha')
@@ -311,9 +363,7 @@ def generar_pdf_informe(request, numero_ingreso):
     return response
     
 def generar_pdf_ingreso(request, ingreso_id):
-    from pathlib import Path 
-    from io import BytesIO
-    import os
+    from pathlib import Path
     ingreso = get_object_or_404(Ingreso, id=ingreso_id)
     equipo = ingreso.equipo
     cliente = equipo.cliente
@@ -328,6 +378,15 @@ def generar_pdf_ingreso(request, ingreso_id):
                 'ruta': ruta_uri,
                 'descripcion': img.descripcion,
         })
+    
+    imagenes_serial = ImagenSerial.objects.filter(equipo=equipo)
+    imagenes_serial_rutas = []
+    for img in imagenes_serial:
+        ruta_uri = request.build_absolute_uri(img.imagen.url)
+        print(ruta_uri)
+        imagenes_serial_rutas.append({
+            'ruta': ruta_uri,
+        })
        
     # Renderizar PDF desde template
     html = render_to_string('gestion/pdf_ingreso.html', {
@@ -335,6 +394,7 @@ def generar_pdf_ingreso(request, ingreso_id):
         'cliente': cliente,
         'equipo': equipo,
         'imagenes': imagenes_rutas,
+        'imagenes_serial': imagenes_serial_rutas,
         
      })
 
@@ -383,19 +443,131 @@ def login_personalizado(request):
         form = AuthenticationForm()
     return render(request, 'gestion/login.html', {'form': form})
 
+#Dashboard se renderiza en dashboard.html
 def dashboard(request):
-    total_ingresos = Ingreso.objects.count()
-    activos = Ingreso.objects.exclude(estado='entregado').count()
-    entregados = Ingreso.objects.filter(estado='entregado').count()
-    garantias = Ingreso.objects.filter(es_garantia=True).count()
+    """Dashboard principal con KPIs y gráficos"""
+    
+    # KPIs optimizados en una sola query
+    stats = Ingreso.objects.aggregate(
+        total=Count('id'),
+        activos=Count('id', filter=~Q(estado='entregado')),
+        entregados=Count('id', filter=Q(estado='entregado')),
+        garantias=Count('id', filter=Q(es_garantia=True))
+    )
+    
+    # Estados con etiquetas legibles
+    estados_data = (
+        Ingreso.objects.values('estado')
+        .annotate(total=Count('id'))
+        .order_by('-total')  # Ordenar por cantidad descendente
+    )
+    
+    #Obtener lista de estados unicos para el filtro
+    estados_disponibles = (
+        Ingreso.objects
+        .values_list('estado', flat=True)
+        .distinct()
+        .order_by('estado')
+    )
+    
+    # Últimos 6 meses con nombres de mes
+    hoy = now()
+    hace_6_meses = hoy - timedelta(days=180)
+    
+    ingresos_mes = (
+        Ingreso.objects
+        .filter(fecha_ingreso__gte=hace_6_meses)
+        .annotate(mes=TruncMonth('fecha_ingreso'))  # Más preciso que F('month')
+        .values('mes')
+        .annotate(total=Count('id'))
+        .order_by('mes')
+    )
+    
+    # Formatear datos para el template
+    ingresos_mes_formateados = [
+        {
+            'mes': item['mes'].strftime('%b %Y'),  # 'Ene 2024'
+            'total': item['total']
+        }
+        for item in ingresos_mes
+    ]
     
     context = {
-        'total_ingresos': total_ingresos,
-        'activos': activos,
-        'entregados': entregados,
-        'garantias': garantias,
+        'total_ingresos': stats['total'],
+        'activos': stats['activos'],
+        'entregados': stats['entregados'],
+        'garantias': stats['garantias'],
+        'estados_data': list(estados_data),
+        'ingresos_mes': ingresos_mes_formateados,
+        'estadis_disponibles': list(estados_disponibles),
     }
     
     return render(request, 'gestion/dashboard.html', context)
 
+#API devuelve estadisticas filtradas a Dashboard
+@require_http_methods(["GET"])
+def estadisticas_api(request):
+    """API para estadísticas filtradas por fecha"""
     
+    fecha_inicio = parse_date(request.GET.get('inicio', ''))
+    fecha_fin = parse_date(request.GET.get('fin', ''))
+    estado = request.GET.get('estado', '')
+    
+    # Validación de fechas
+    if fecha_inicio and fecha_fin and fecha_inicio > fecha_fin:
+        return JsonResponse({
+            'error': 'La fecha de inicio no puede ser mayor que la fecha fin'
+        }, status=400)
+    
+    #Construccion de filtros
+    ingresos = Ingreso.objects.all()
+    
+    if fecha_inicio:
+        ingresos = ingresos.filter(fecha_ingreso__date__gte=fecha_inicio)
+    if fecha_fin:
+        ingresos = ingresos.filter(fecha_ingreso__date__lte=fecha_fin)
+    if estado:
+        ingresos = ingresos.filter(estado=estado)
+    
+    # KPIs filtrados
+    stats = ingresos.aggregate(
+        total=Count('id'),
+        activos=Count('id', filter=~Q(estado='entregado')),
+        entregados=Count('id', filter=Q(estado='entregado')),
+        garantias=Count('id', filter=Q(es_garantia=True))
+    )
+    
+    # Estados
+    estados_data = (
+        ingresos.values('estado')
+        .annotate(total=Count('id'))
+        .order_by('-total')
+    )
+    
+    # Ingresos por mes
+    ingresos_mes = (
+        ingresos
+        .annotate(mes=TruncMonth('fecha_ingreso'))
+        .values('mes')
+        .annotate(total=Count('id'))
+        .order_by('mes')
+    )
+    
+    ingresos_mes_formateados = [
+        {
+            'mes': item['mes'].strftime('%b %Y'),
+            'total': item['total']
+        }
+        for item in ingresos_mes
+    ]
+    
+    data = {
+        'total_ingresos': stats['total'],
+        'activos': stats['activos'],
+        'entregados': stats['entregados'],
+        'garantias': stats['garantias'],
+        'estados': list(estados_data),
+        'ingresos_mes': ingresos_mes_formateados,
+    }
+    
+    return JsonResponse(data)

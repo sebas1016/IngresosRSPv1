@@ -1,13 +1,14 @@
-
-<!DOCTYPE html>
 {% load static %}
+<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestión de Ingresos - Taller Electrónico</title>
-    <link rel="stylesheet" href="{% static 'gestion/style.css' %}">
+    <title class="title">Gestión de Ingresos - Taller Electronico</title>
+    <link rel="stylesheet" href="{% static 'gestion/style.css' %}?v=2">
+    <link rel="icon" type="image/x-icon" href="{% static 'images/logo.ico' %}">
     <style>
+        
         .table-container {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch; /* para scroll suave en iOS */
@@ -16,7 +17,7 @@
 
 #ingresosTable {
     width: 100%;
-    min-width: 900px; /* Ajusta según cuántas columnas tenga tu tabla */
+    min-width: 900px; /* Ajusta segÃºn cuÃ¡ntas columnas tenga tu tabla */
     border-collapse: collapse;
 }
 
@@ -24,7 +25,7 @@
 #ingresosTable td {
     padding: 12px 10px;
     text-align: left;
-    white-space: nowrap; /* evita que el texto se rompa en varias líneas */
+    white-space: nowrap; /* evita que el texto se rompa en varias lÃ­neas */
 }
 
 /* Opcional: Estilo visual de la barra de scroll */
@@ -46,7 +47,7 @@
 </head>
 <body>
     <div class="container">
-        <h1><a href="{%url 'inicio'%}">🔧 Gestión de Ingresos - Taller Electrónico</a></h1>
+        <h2 class="titulo-principal"><a href="{%url 'inicio'%}">Gestión de Ingresos - Taller Electrónico</a></h2>
         
         <!-- Filtros -->
         <div class="filtros">
@@ -55,12 +56,21 @@
             <select id="estadoFiltro">
                 <option value="">--Todos--</option>
                 <option value="pendiente">Pendiente por revisión</option>
-                <option value="revisado">Revisado</option>
                 <option value="reparacion">En reparación</option>
+                <option value="revisado">Revisado</option>
+                <option value="autorizado">Autorizado</option>
                 <option value="reparado">Reparado</option>
                 <option value="entregado">Entregado</option>
                 <option value="devolucion">Devolución</option>
                 <option value="garantia">Garantía</option>
+            </select>
+
+            <label for="alertaFiltro">Alertas:</label>
+            <select id="alertaFiltro">
+                <option value="">Todos</option>
+                <option value="green">Reciente</option>
+                <option value="con-alerta">Advertencia</option>
+                <option value="critico">Crítico</option>
             </select>
         </div>
 
@@ -73,7 +83,7 @@
                         <th>Estado</th>
                         <th>Cliente</th>
                         <th>Equipo</th>
-                        <th>¿Garantía?</th>
+                        <th>¿Garantí­a?</th>
                         <th>Ver</th>
                     </tr>
                 </thead>
@@ -84,7 +94,7 @@
         </div>
     </div>
 
-    <!-- Modal de Edición -->
+    <!-- Modal de Ediciónn -->
   <div id="editModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -94,7 +104,7 @@
             <div class="modal-body">
                <!-- Información del Cliente y Equipo -->
                 <div class="info-section">
-                    <h3>📋 Información del Ingreso</h3>
+                    <h3>Información del Ingreso</h3>
                     <div class="info-grid">
                         <div class="info-item">
                             <strong>Número de Ingreso</strong>
@@ -112,11 +122,11 @@
                 </div>
 
                 <div class="info-section">
-                    <h3>👤 Información del Cliente</h3>
+                    <h3>Información del Cliente</h3>
                     <div class="info-grid">
                         <div class="info-item">
                             <strong>Nombre</strong>
-                            <span id="info-cliente">Juan Pérez</span>
+                            <span id="info-cliente">Juan PÃ©rez</span>
                         </div>
                         <div class="info-item">
                             <strong>Celular</strong>
@@ -134,7 +144,7 @@
                 </div>
 
                 <div class="info-section">
-                    <h3>💻 Información del Equipo</h3>
+                    <h3>Información del Equipo</h3>
                     <div class="info-grid">
                         <div class="info-item">
                             <strong>Marca</strong>
@@ -170,44 +180,45 @@
                                 <option value="reparacion">En reparación</option>
                                 <option value="revisado">Revisado</option>
                                 <option value="reparado">Reparado</option>
+                                <option value="autorizado">Autorizado</option>
                                 <option value="entregado">Entregado</option>
                                 <option value="devolucion">Devolución</option>
-                                <option value="garantia">Garantía</option>
+                                <option value="garantia">Garantí­a</option>
                             </select>
                         </div>
                         <div class="form-group">
                             <div class="checkbox-group">
                                 <input type="checkbox" id="paga_revision" name="paga_revision">
-                                <label for="paga_revision">¿Pagó revisión?</label>
+                                <label for="paga_revision">¿Pagá revisión?</label>
                             </div>
                         </div>
                     </div>
 
                     <div class="checkbox-group">
                         <input type="checkbox" id="es_garantia" name="es_garantia">
-                        <label for="es_garantia">¿Es garantía?</label>
+                        <label for="es_garantia">¿Es garantí­a?</label>
                     </div>
                 </form>
 
                 <!-- Historial -->
                 <div class="historial-section">
-                    <h3>📈 Historial del Equipo</h3>
+                    <h3>Historial del Equipo</h3>
                     <div id="historial-container">
                         <div class="historial-item">
                             <div class="historial-header">
                                 <span class="historial-fecha">15/01/2024 - 10:30 AM</span>
                                 <span class="historial-usuario">Juan Morales</span>
                             </div>
-                            <div class="historial-descripcion">Ingreso inicial - Pendiente por revisión</div>
+                            <div class="historial-descripcion">Ingreso inicial - Pendiente por revisiÃ³n</div>
                             <div class="historial-descripcion">Equipo no enciende, posible problema con fuente</div>
                         </div>
                         <div class="historial-item">
                             <div class="historial-header">
                                 <span class="historial-fecha">16/01/2024 - 14:20 PM</span>
-                                <span class="historial-usuario">María Sánchez</span>
+                                <span class="historial-usuario">MarÃ­a SÃ¡nchez</span>
                             </div>
-                            <div class="historial-descripcion">Revisión técnica completada</div>
-                            <div class="historial-descripcion">Problema confirmado: Fuente de alimentación defectuosa</div>
+                            <div class="historial-descripcion">RevisiÃ³n tÃ©cnica completada</div>
+                            <div class="historial-descripcion">Problema confirmado: Fuente de alimentaciÃ³n defectuosa</div>
                             <div class="historial-costo">Costo estimado: $80.000</div>
                         </div>
                     </div>
@@ -216,7 +227,7 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
                 <button type="button" class="btn btn-primary" onclick="saveChanges()">Guardar Cambios</button>
-                <a id="btnDescargarPDF" class="btn btn-download" href="#" target="_blank">📄 Descargar PDF</a>
+                <a id="btnDescargarPDF" class="btn btn-download" href="#" target="_blank">Descargar PDF</a>
             </div>
         </div>
     </div>
@@ -225,13 +236,13 @@
         
         let currentIngresoId = null;
 
-        // Función para formatear fecha
+        // FunciÃ³n para formatear fecha
         function formatearFecha(fechaString) {
             const fecha = new Date(fechaString);
             return fecha.toLocaleDateString('es-CO') + ' - ' + fecha.toLocaleTimeString('es-CO', {hour: '2-digit', minute:'2-digit'});
         }
 
-        // Función para formatear moneda
+        // FunciÃ³n para formatear moneda
         function formatearMoneda(valor) {
             if (!valor) return '';
             return new Intl.NumberFormat('es-CO', {
@@ -241,11 +252,11 @@
             }).format(valor);
         }
 
-        // Función para abrir el modal
+        // FunciÃ³n para abrir el modal
         function openModal(ingresoId) {
             currentIngresoId = ingresoId;
 
-            fetch(`/api/ingresos/${ingresoId}/`)  // Asegúrate que esta sea la URL correcta
+            fetch(`/api/ingresos/${ingresoId}/`)  // AsegÃºrate que esta sea la URL correcta
                 .then(response => {
                     if (!response.ok) {
                         throw new Error('Error al obtener los datos del ingreso.');
@@ -302,13 +313,13 @@
         }
 
 
-        // Función para cerrar el modal
+        // FunciÃ³n para cerrar el modal
         function closeModal() {
             document.getElementById('editModal').classList.remove('show');
             currentIngresoId = null;
         }
 
-        // Función para guardar cambios
+        // FunciÃ³n para guardar cambios
         function saveChanges() {
             if (!currentIngresoId) return;
 
@@ -343,17 +354,17 @@
 
                         const garantiaCell = row.cells[5];
                         garantiaCell.innerHTML = es_garantia
-                            ? '<span class="garantia-badge">GARANTÍA</span>'
+                            ? '<span class="garantia-badge">GARANTÃA</span>'
                             : '';
                     }
                     alert('Cambios guardados exitosamente');
                     closeModal();
-                    // Aquí puedes actualizar la tabla si quieres
+                    // AquÃ­ puedes actualizar la tabla si quieres
 
                 })
                 .catch(error => {
                     console.error(error);
-                    alert('Ocurrió un error al guardar los cambios');
+                    alert('OcurriÃ³ un error al guardar los cambios');
                 });
         }
         //obtener CSRF
@@ -373,7 +384,7 @@
         }
 
 
-        // Función para obtener texto del estado
+        // FunciÃ³n para obtener texto del estado
         function getStatusText(estado) {
             const estados = {
                 'pendiente': 'Pendiente',
@@ -382,7 +393,7 @@
                 'reparado': 'Reparado',
                 'entregado': 'Entregado',
                 'devolucion': 'Devolución',
-                'garantia': 'Garantía'
+                'garantia': 'Garantí­a'
             };
             return estados[estado] || estado;
         }
@@ -402,14 +413,14 @@
             }
         });
 
-        // Filtros básicos
+        // Filtros bÃ¡sicos
         document.getElementById('busqueda').addEventListener('input', function() {
-            // Aquí iría la lógica de filtrado
+            // AquÃ­ irÃ­a la lÃ³gica de filtrado
             console.log('Filtrar por:', this.value);
         });
 
         document.getElementById('estadoFiltro').addEventListener('change', function() {
-            // Aquí iría la lógica de filtrado por estado
+            // AquÃ­ irÃ­a la lÃ³gica de filtrado por estado
             console.log('Filtrar por estado:', this.value);
         });
     </script>
@@ -417,12 +428,14 @@
         const inputBusqueda = document.getElementById('busqueda');
         const selectEstado = document.getElementById('estadoFiltro');
         const tablaBody = document.getElementById('tabla-ingresos');
+        const selectAlerta = document.getElementById('alertaFiltro');
 
         function buscarIngresos(){
             const query = inputBusqueda.value;
             const estado = selectEstado.value; 
+            const alerta = selectAlerta.value;
 
-            fetch(`/api/buscar-ingresos/?query=${encodeURIComponent(query)}&estado=${estado}`)
+            fetch(`/api/buscar-ingresos/?query=${encodeURIComponent(query)}&estado=${estado}&alerta=${alerta}`)
                 .then(response => response.json())
                 .then(data => {
                     tablaBody.innerHTML = data.html;
@@ -431,6 +444,7 @@
         }
         inputBusqueda.addEventListener('input', buscarIngresos);
         selectEstado.addEventListener('change', buscarIngresos);
+        selectAlerta.addEventListener('change', buscarIngresos);
     </script>
     <script>
     document.addEventListener('DOMContentLoaded', function () {

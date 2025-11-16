@@ -3,11 +3,13 @@ from django.contrib.auth.models import User
 from django.utils.timezone import now
 from django.db import transaction
 from django.db import IntegrityError
+from datetime import datetime, timedelta
 # Create your models here.
 ESTADOS_CJOICES = [
     ('pendiente', 'Pendiente por revisión'),
-    ('revisado', 'Revisado'),
     ('reparacion', 'En reparación'),
+    ('revisado', 'Revisado'),
+    ('autorizado', 'Autorizado'),
     ('reparado', 'Reparado'),
     ('entregado', 'Entregado'),
     ('devolucion', 'Devolución'),
@@ -55,6 +57,65 @@ class Ingreso(models.Model):
     def __str__(self):
         return f"Ingreso {self.numero_ingreso}"
     
+    def calcular_dias_habiles(self, fecha_inicio, fecha_fin):
+        """Calcula dias habliles (excluye sabados y domingos)"""
+        dias_habiles = 0
+        fecha_actual = fecha_inicio.date() if hasattr(fecha_inicio, 'date') else fecha_inicio
+        fecha_final = fecha_fin.date() if hasattr(fecha_fin, 'date') else fecha_fin
+        
+        while fecha_actual <= fecha_final:
+            
+            if fecha_actual.weekday() < 5:
+                dias_habiles += 1
+            fecha_actual += timedelta(days=1)
+            
+        return dias_habiles
+    
+    def dias_en_taller(self):
+        """Calcula los días que lleva el equipo en el taller"""
+        from django.utils.timezone import now
+        if self.estado != 'pendiente':
+            return 0
+        hoy = now() 
+        dias_habiles = self.calcular_dias_habiles(self.fecha_ingreso, hoy)
+        
+        return max(0, dias_habiles - 1)
+    
+    def requiere_alerta(self):
+        """Retorna True si el equipo está pendiente y requiere seguimineto"""
+        return self.estado == 'pendiente'
+    
+    def nivel_alerta(self):
+        """Retorna nivel alerta: normal, advertencia, critico"""
+        if self.estado != 'pendiente':
+            return 'normal'
+        
+        dias = self.dias_en_taller()
+        if dias > 8:
+            return 'critico'
+        elif dias > 5 and dias <= 8:
+            return 'adverterncia'
+        else:
+            return 'green'
+    
+    def obtener_mensaje_alerta(self):
+        """Retorna un mensaje descriptivo según el nivel de alerta"""
+        dias = self.dias_en_taller()
+        nivel = self.nivel_alerta()
+        
+        mensajes = {
+            'green': f'Reciente: {dias} día{"s" if dias != 1 else ""} hábil{"es" if dias != 1 else ""}',
+            'advertencia': f'Atención: {dias} días hábiles sin revisar',
+            'critico': f'¡URGENTE!: {dias} días hábiles sin revisar'
+        }
+        
+        return mensajes.get(nivel, f'{dias} días hábiles en taller')
+    
+    class Meta:
+        ordering = ['-fecha_ingreso']
+        verbose_name = 'Ingreso'
+        verbose_name_plural = 'Ingresos'
+    
 class HistorialEquipo(models.Model):
     ingreso = models.ForeignKey(Ingreso, on_delete=models.CASCADE)
     fecha = models.DateTimeField(auto_now_add=True)
@@ -96,3 +157,15 @@ class ContadorIngreso(models.Model):
 
     def __str__(self):
         return f"{self.mes_ano}: {self.ultimo_numero}"
+
+class ImagenSerial(models.Model):
+    equipo = models.ForeignKey(Equipo, on_delete=models.CASCADE, related_name='imagenes_serial')
+    imagen = models.ImageField(upload_to='seriales/')
+    fecha_subida = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        verbose_name = 'Imagen de serial'
+        verbose_name_plural = 'Imagenes de serial'
+        
+    def __str__(self):
+        return f"serial {self.equipo.serial} - {self.fecha_subida.strftime('%d/%m/%Y')}"

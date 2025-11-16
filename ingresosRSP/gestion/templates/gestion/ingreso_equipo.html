@@ -10,7 +10,7 @@
 </head>
 <body>
     <div class="container">
-        <h2>Ingreso de Equipo al taller <a href="{%url 'inicio'%}">Inicio</a></h2>
+        <h2 class="titulo-principal"><a href="{%url 'inicio'%}">Ingreso de Equipo al taller </a></h2>
         <form method="POST" enctype="multipart/form-data">
             {% csrf_token %}
 
@@ -33,9 +33,25 @@
                 <datalist id="marcas">
                     <option value="Bose">
                     <option value="JBL">
+                    <option value="Marshall">
+                    <option value="Sonos">
+                    <option value="B3">
+                    <option value="Denon">
+                    <option value="Marantz">
+                    <option value="Onkyo">
                 </datalist>
 
-
+                <!-- Fotos del serial-->
+                <div class="form-section" style="margin-top: 20px;">
+                    <label for="imagenes_serial">
+                        <strong>Fotos del serial (opcional):</strong>
+                        <span style="font-size: 0.9em; color: #666;">para quipos con multipls seriales</span>
+                    </label>
+                    <input type="file" name="imagenes_serial" id="imagenes_serial" multiple accept="image/*">
+                    <small style="color: #7f8c8d; margin-top: 5px; display: block;">
+                        📸 Puedes subir varias fotos si el equipo tiene múltiples números de serie
+                    </small>
+                </div>
             </fieldset>
 
             <fieldset>

@@ -9,11 +9,11 @@
     <link rel="stylesheet" href="{% static 'gestion/detalle_ingreso_style.css' %}">
     <link rel="icon" type="image/x-icon" href="{% static 'images/logo.ico' %}">
 </head>
-<body>
+<body> 
     <div class="container">
         <!-- Header -->
         <div class="detalle-header">
-            <h1>Ingreso #{{ ingreso.numero_ingreso }} <a href="{%url 'inicio'%}">Inicio</a></h1>
+            <h1 class="titulo"><a href="{%url 'inicio'%}">Ingreso #{{ ingreso.numero_ingreso }}</a></h1>
             <p>Detalle completo del ingreso</p>
             <p><hr>
                 <h3>Generar Informe Técnico Final</h3>
@@ -74,6 +74,26 @@
             </div>
         </div>
         
+        <!-- Imágenes del Serial -->
+        {% if imagenes_serial %}
+        <div class="info-section serial-section">
+            <h3>🔢 Imágenes del Serial</h3>
+            <p style="color: #7f8c8d; font-size: 0.95em; margin-bottom: 15px;">
+                Fotos del serial
+            </p>
+            <div class="galeria galeria-serial">
+                {% for img in imagenes_serial %}
+                <div class="galeria-item serial-item">
+                    <img src="{{ img.imagen.url }}" alt="Serial del equipo" onclick="openImageModal(this)">
+                    <div class="serial-info">
+                        <small>📅 {{ img.fecha_subida|date:"d/m/Y"}}</small>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+        
         <!-- Información del Cliente -->
         <div class="info-section">
             <h3>👤 Información del Cliente</h3>
@@ -104,7 +124,7 @@
             <div class="galeria">
                 {% for img in imagenes %}
                 <div class="galeria-item">
-                    <img src="{{ img.imagen.url }}" alt="Imagen del ingreso">
+                    <img src="{{ img.imagen.url }}" alt="Imagen del ingreso" onclick="openImageModal(this)">
                     {% if img.descripcion %}
                     <p>{{ img.descripcion }}</p>
                     {% endif %}
@@ -141,7 +161,7 @@
                     <div class="galeria" style="margin-top: 15px;">
                         {% for img in h.imagenes.all %}
                         <div class="galeria-item">
-                            <img src="{{ img.imagen.url }}" alt="Imagen historial">
+                            <img src="{{ img.imagen.url }}" alt="Imagen historial" onclick="openImageModal(this)">
                             {% if img.descripcion %}
                             <p>{{ img.descripcion }}</p>
                             {% endif %}
@@ -182,6 +202,12 @@
         </div>
     </div>
     
+    <!-- Modal para imágenes -->
+    <div id="imageModal" class="image-modal">
+        <span class="image-modal-close" onclick="closeImageModal()">&times;</span>
+        <img class="image-modal-content" id="modalImage">
+    </div>
+    
     <script>
         function toggleFormularioHistorial() {
             const formDiv = document.getElementById('formulario-historial');
@@ -196,6 +222,37 @@
                 btn.textContent = '+ Agregar nueva entrada';
             }
         }
+        
+        // Función para abrir imagen en modal
+        function openImageModal(img) {
+            event.stopPropagation();
+            const modal = document.getElementById('imageModal');
+            const modalImg = document.getElementById('modalImage');
+            modal.style.display = 'block';
+            modalImg.src = img.src;
+            document.body.style.overflow = 'hidden';
+        }
+        
+        // Función para cerrar modal
+        function closeImageModal() {
+            const modal = document.getElementById('imageModal');
+            modal.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+        
+        // Cerrar modal al hacer clic en el fondo negro
+        document.getElementById('imageModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeImageModal();
+            }
+        });
+        
+        // Cerrar modal con tecla ESC
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeImageModal();
+            }
+        });
         
         // Animación de entrada para las secciones
         document.addEventListener('DOMContentLoaded', function() {

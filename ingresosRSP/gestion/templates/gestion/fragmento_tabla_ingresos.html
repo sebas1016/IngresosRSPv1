@@ -1,7 +1,18 @@
 <!DOCTYPE html>
 {% for ingreso in ingresos %}
-<tr data-id="{{ ingreso.id }}" onclick="openModal({{ ingreso.id }})">
-    <td>{{ ingreso.numero_ingreso }}</td>
+<tr data-id="{{ ingreso.id }}" class="ingreso-row {% if ingreso.requiere_alerta %}alerta-{{ ingreso.nivel_alerta }}{% endif %}" onclick="openModal({{ ingreso.id }})">
+    <td>
+        <div class="numero-container">
+            {{ ingreso.numero_ingreso }}
+            {% if ingreso.requiere_alerta %}
+                <span class="alerta-badge {{ ingreso.nivel_alerta }}" 
+                      title="{{ ingreso.obtener_mensaje_alerta }} (solo días hábiles)">
+                    <span class="alerta-icon">⚠️</span>
+                    <span class="dias-badge">{{ ingreso.dias_en_taller }}d</span>
+                </span>
+            {% endif %}
+        </div>
+    </td>
     <td>{{ ingreso.fecha_ingreso|date:"d/m/y"}}</td>
     <td><span class="status {{ingreso.estado}}">{{ ingreso.get_estado_display }}</span></td>
     <td>{{ ingreso.equipo.cliente.nombre }}</td>
@@ -11,8 +22,9 @@
             <span class="garantia-badge">GARANTÍA</span>
         {% endif %}
     </td>
-    <td><a href="{% url 'detalle_ingreso' numero_ingreso=ingreso.numero_ingreso %}">Ver</a></td>
+    <td><a href="{% url 'detalle_ingreso' numero_ingreso=ingreso.numero_ingreso %}" onclick="event.stopPropagation()">Ver</a></td>
 </tr>
 {% empty %}
-<tr><td colspan="6">No se encontraron resultados</td></tr>
+<tr><td colspan="7">No se encontraron resultados</td></tr>
 {% endfor %}
+

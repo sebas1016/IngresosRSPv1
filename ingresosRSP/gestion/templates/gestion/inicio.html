@@ -41,11 +41,11 @@
                         <span class="description">Registrar nuevo equipo en el sistema</span>
                     </a>
 
-                    <a href="{% url 'buscar_equipo' %}" class="menu-item buscar">
+                    <!--<aclass="menu-item buscar">
                         <span class="icon">🔍</span>
                         <span class="title">Buscar Equipo</span>
                         <span class="description">Buscar equipos por diferentes criterios</span>
-                    </a>
+                    </a>-->
 
                     <a href="{% url 'listar_ingresos' %}" class="menu-item listar">
                         <span class="icon">📂</span>
@@ -53,7 +53,7 @@
                         <span class="description">Ver todos los equipos registrados</span>
                     </a>
 
-                    <a class="menu-item listar" href="{% url 'dashboard' %}">
+                    <a class="menu-item dashboard" href="{% url 'dashboard' %}">
                         <span class="icon"> <img src="{% static 'images/dashboard.png' %}" width="100"> </span>
                         <span class="title">Dashboard</span>
                         <span class="description">Ver estadisticas</span>

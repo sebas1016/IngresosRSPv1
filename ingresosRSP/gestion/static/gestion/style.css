@@ -3,6 +3,36 @@
             padding: 0;
             box-sizing: border-box;
         }
+        .titulo-principal {
+            color: white;
+            background-color: #34495e;
+            font-size: 2.2em;
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            border-radius: 10px;
+            position: relative;
+            box-shadow: 0 5px 15px rgba(52, 73, 94, 0.3);
+        }
+        .titulo-principal a {
+            color: white;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .titulo-principal a:visited {
+            color: white; /* evita el color violeta del enlace visitado */
+        }
+
+        .titulo-principal a:hover {
+            color: #f1c40f; /* o el color que quieras al pasar el mouse */
+            text-decoration: underline; /* opcional */
+        }
+
+        .titulo-principal a:active {
+            color: white; /* mantiene blanco al hacer clic */
+        }
+
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -92,6 +122,10 @@
             font-size: 12px;
             font-weight: 600;
             text-transform: uppercase;
+        }
+        .status.autorizado {
+            background-color: green;
+            color: white;
         }
         
         .status.devolucion {
@@ -599,11 +633,11 @@ main {
     color: white;
 }
 
-.menu-item.buscar {
+.menu-item.dashboard {
     border-color: #f39c12;
 }
 
-.menu-item.buscar:hover {
+.menu-item.dashboard:hover {
     border-color: #f39c12;
     background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
     color: white;
@@ -716,4 +750,106 @@ footer {
 
 .table-container::-webkit-scrollbar-track {
     background-color: transparent;
+}
+
+/* ============================================
+   SISTEMA DE ALERTAS POR DÍAS EN TALLER
+   ============================================ */
+
+/* Contenedor del número con badge */
+.numero-container {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: nowrap;
+}
+
+/* Badge de alerta */
+.alerta-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 3px 6px;
+    border-radius: 10px;
+    font-size: 0.7em;
+    font-weight: 600;
+    white-space: nowrap;
+    animation: pulseAlert 2s infinite;
+}
+
+/* Colores según nivel de alerta */
+.alerta-badge.warning {
+    background: linear-gradient(135deg, #f39c12 0%, #f1c40f 100%);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(243, 156, 18, 0.3);
+}
+
+.alerta-badge.danger {
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(231, 76, 60, 0.4);
+}
+
+/* Icono y texto del badge */
+.alerta-icon {
+    font-size: 1em;
+    animation: shake 0.5s infinite;
+}
+
+.dias-badge {
+    font-size: 0.85em;
+}
+
+/* Resaltar fila completa con alerta */
+.ingreso-row.alerta-adverterncia {
+    
+    border-left: 4px solid #f39c12 !important;
+}
+
+.ingreso-row.alerta-critico {
+    
+    border-left: 4px solid #e74c3c !important;
+}
+
+.ingreso-row.alerta-green {
+    
+    border-left: 4px solid green !important;
+}
+
+
+
+.ingreso-row.alerta-danger:hover {
+    box-shadow: -4px 0 0 0 #e74c3c, 0 4px 15px rgba(231, 76, 60, 0.2) !important;
+}
+
+/* Animaciones */
+@keyframes pulseAlert {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.85;
+        transform: scale(1.05);
+    }
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-2px); }
+    75% { transform: translateX(2px); }
+}
+
+/* Responsive para alertas */
+@media (max-width: 768px) {
+    .numero-container {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+    
+    .alerta-badge {
+        font-size: 0.65em;
+        padding: 2px 5px;
+    }
 }

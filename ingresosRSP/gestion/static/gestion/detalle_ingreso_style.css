@@ -1,22 +1,48 @@
-/* ====================================
-   ESTILOS PARA DETALLE DE INGRESO
-   ==================================== */
-
 /* Estilos específicos para detalle ingreso */
 .detalle-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: #34495e;
     color: white;
-    padding: 30px;
+    padding: 25px;
     border-radius: 15px;
-    margin-bottom: 30px;
+    margin-bottom: 25px;
     text-align: center;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+} 
+
+.titulo {
+    color: white;
+    background-color: #34495e;
+    font-size: 2.2em;
+    text-align: center;
+    margin-bottom: 30px;
+    padding: 0px;
+    border-radius: 0px;
+    position: relative;
+    box-shadow: 0 5px 15px rgba(52, 73, 94, 0.3);
+}
+.titulo a {
+    color: white;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.titulo a:visited {
+    color: white; /* evita el color violeta del enlace visitado */
+}
+
+.titulo a:hover {
+    color: #f1c40f; /* o el color que quieras al pasar el mouse */
+    text-decoration: underline; /* opcional */
+}
+
+.titulo a:active {
+    color: white; /* mantiene blanco al hacer clic */
 }
 
 .detalle-header h1 {
     font-size: 2.5em;
     margin-bottom: 10px;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    text-shadow: 2px 2px 4px rgb(52, 73, 94, 0.3);
 }
 
 .detalle-header p {
@@ -99,7 +125,19 @@
     margin-top: 5px;
     width: fit-content;
 }
+.status-badge.devolucion {
+    background-color: red;
+    color: white;
+}
+.status-badge.autorizado {
+    background-color: green;
+    color: white;
+}
 
+.status-badge.revisado {
+    background-color: #00b894;
+    color: white;
+}
 .status-badge.pendiente {
     background-color: #ffeaa7;
     color: #d63031;
@@ -510,5 +548,192 @@
     .historial-section {
         box-shadow: none !important;
         border: 1px solid #ddd !important;
+    }
+}
+
+/* Estilos específicos para imágenes de serial */
+.serial-section {
+    border-left: 4px solid #9b59b6;
+}
+
+.serial-section h3:before {
+    background: #9b59b6;
+}
+
+.galeria-serial {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+}
+
+.serial-item {
+    position: relative;
+    cursor: pointer;
+}
+
+.serial-item img {
+    height: 180px;
+    transition: transform 0.3s ease;
+}
+
+.serial-item:hover img {
+    transform: scale(1.05);
+}
+
+.serial-info {
+    padding: 10px;
+    background: #f8f9fa;
+    text-align: center;
+    border-top: 2px solid #9b59b6;
+}
+
+.serial-info small {
+    color: #7f8c8d;
+    font-size: 0.85em;
+}
+
+/* Modal para ver imágenes en grande */
+.image-modal {
+    display: none;
+    position: fixed;
+    z-index: 9999;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.9);
+    animation: fadeIn 0.3s ease;
+}
+
+.image-modal-content {
+    margin: auto;
+    display: block;
+    max-width: 90%;
+    max-height: 90%;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    border-radius: 10px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+}
+
+.image-modal-close {
+    position: absolute;
+    top: 20px;
+    right: 35px;
+    color: #f1f1f1;
+    font-size: 40px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: color 0.3s ease;
+}
+
+.image-modal-close:hover {
+    color: #e74c3c;
+}
+
+/* Responsive para sección de serial */
+@media (max-width: 768px) {
+    .galeria-serial {
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    }
+    
+    .serial-item img {
+        height: 140px;
+    }
+}
+
+@media (max-width: 480px) {
+    .galeria-serial {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+    
+    .serial-item img {
+        height: 120px;
+    }
+    
+    .serial-info {
+        padding: 8px;
+    }
+}
+
+/* Modal para ver imágenes en grande */
+.image-modal {
+    display: none;
+    position: fixed;
+    z-index: 9999;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.95);
+    animation: fadeIn 0.3s ease;
+    overflow: hidden;
+}
+
+.image-modal-content {
+    margin: auto;
+    display: block;
+    max-width: 90%;
+    max-height: 90%;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    border-radius: 10px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    animation: zoomIn 0.3s ease;
+}
+
+@keyframes zoomIn {
+    from {
+        transform: translate(-50%, -50%) scale(0.7);
+        opacity: 0;
+    }
+    to {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
+    }
+}
+
+.image-modal-close {
+    position: absolute;
+    top: 20px;
+    right: 35px;
+    color: #f1f1f1;
+    font-size: 50px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    z-index: 10000;
+    background: rgba(0, 0, 0, 0.5);
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+}
+
+.image-modal-close:hover {
+    color: #e74c3c;
+    background: rgba(231, 76, 60, 0.2);
+    transform: rotate(90deg);
+}
+
+/* Responsive para modal */
+@media (max-width: 768px) {
+    .image-modal-content {
+        max-width: 95%;
+        max-height: 80%;
+    }
+    
+    .image-modal-close {
+        top: 10px;
+        right: 10px;
+        font-size: 40px;
+        width: 40px;
+        height: 40px;
     }
 }
