@@ -193,7 +193,7 @@ def listar_ingresos(request):
             Q(equipo__marca__icontains=busqueda)
         )
         
-    paginator = Paginator(ingresos, 10)  # 100 por página
+    paginator = Paginator(ingresos, 100)  # 100 por página
     page = request.GET.get('page')
     ingresos_page = paginator.get_page(page)
     
@@ -260,7 +260,7 @@ def buscar_ingresos_api(request):
         else:
             ingresos_filtrados=ingresos_list
     
-    paginator = Paginator(ingresos, 10)
+    paginator = Paginator(ingresos, 100)
     page_obj  = paginator.get_page(page_number)
         
     html = render_to_string('gestion/fragmento_tabla_ingresos.html', {
