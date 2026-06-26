@@ -233,232 +233,170 @@
     </div>
 
     <script>
-        
-        let currentIngresoId = null;
+        // ── Estado y referencias a elementos ──────────────────────────────
+let currentIngresoId = null;
+let paginaActual = 1;
+let debounceTimer = null;
 
-        // FunciÃ³n para formatear fecha
-        function formatearFecha(fechaString) {
-            const fecha = new Date(fechaString);
-            return fecha.toLocaleDateString('es-CO') + ' - ' + fecha.toLocaleTimeString('es-CO', {hour: '2-digit', minute:'2-digit'});
+const inputBusqueda = document.getElementById('busqueda');
+const selectEstado  = document.getElementById('estadoFiltro');
+const selectAlerta  = document.getElementById('alertaFiltro');
+const tablaBody     = document.getElementById('tabla-ingresos');
+
+// ── Utilidades de formato ──────────────────────────────────────────
+function formatearFecha(fechaString) {
+    const fecha = new Date(fechaString);
+    return fecha.toLocaleDateString('es-CO') + ' - ' + fecha.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
+}
+
+function formatearMoneda(valor) {
+    if (!valor) return '';
+    return new Intl.NumberFormat('es-CO', {
+        style: 'currency', currency: 'COP', minimumFractionDigits: 0
+    }).format(valor);
+}
+
+function getStatusText(estado) {
+    const estados = {
+        'pendiente': 'Pendiente', 'reparacion': 'En Reparación',
+        'revisado': 'Revisado', 'reparado': 'Reparado',
+        'entregado': 'Entregado', 'devolucion': 'Devolución',
+        'garantia': 'Garantía'
+    };
+    return estados[estado] || estado;
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        for (let cookie of document.cookie.split(';')) {
+            cookie = cookie.trim();
+            if (cookie.startsWith(name + '=')) {
+                cookieValue = decodeURIComponent(cookie.slice(name.length + 1));
+                break;
+            }
         }
+    }
+    return cookieValue;
+}
 
-        // FunciÃ³n para formatear moneda
-        function formatearMoneda(valor) {
-            if (!valor) return '';
-            return new Intl.NumberFormat('es-CO', {
-                style: 'currency',
-                currency: 'COP',
-                minimumFractionDigits: 0
-            }).format(valor);
-        }
+// ── Modal ───────────────────────────────────────────────────────────
+function openModal(ingresoId) {
+    currentIngresoId = ingresoId;
 
-        // FunciÃ³n para abrir el modal
-        function openModal(ingresoId) {
-            currentIngresoId = ingresoId;
+    fetch(`/api/ingresos/${ingresoId}/`)
+        .then(response => {
+            if (!response.ok) throw new Error('Error al obtener los datos del ingreso.');
+            return response.json();
+        })
+        .then(ingreso => {
+            document.getElementById('info-numero').textContent = ingreso.numero_ingreso;
+            document.getElementById('info-fecha').textContent = formatearFecha(ingreso.fecha_ingreso);
+            document.getElementById('info-recibido').textContent = ingreso.recibido_por;
+            document.getElementById('info-cliente').textContent = ingreso.cliente.nombre;
+            document.getElementById('info-celular').textContent = ingreso.cliente.celular;
+            document.getElementById('info-barrio').textContent = ingreso.cliente.barrio;
+            document.getElementById('info-referencia').textContent = ingreso.cliente.referencia;
+            document.getElementById('info-marca').textContent = ingreso.equipo.marca;
+            document.getElementById('info-modelo').textContent = ingreso.equipo.modelo;
+            document.getElementById('info-serial').textContent = ingreso.equipo.serial || 'Sin serial';
+            document.getElementById('info-descripcion-equipo').textContent = ingreso.equipo.descripcion_general;
+            document.getElementById('descripcion_dano').value = ingreso.descripcion_dano;
+            document.getElementById('estado_ingreso').value = ingreso.estado;
+            document.getElementById('paga_revision').checked = ingreso.paga_revision;
+            document.getElementById('es_garantia').checked = ingreso.es_garantia;
+            document.getElementById('btnDescargarPDF').href = `/ingresos/${ingresoId}/pdf/`;
 
-            fetch(`/api/ingresos/${ingresoId}/`)  // AsegÃºrate que esta sea la URL correcta
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Error al obtener los datos del ingreso.');
-                    }
-                    return response.json();
-                })
-            .then(ingreso => {
-                // Llenar campos con los datos del ingreso
-                document.getElementById('info-numero').textContent = ingreso.numero_ingreso;
-                document.getElementById('info-fecha').textContent = formatearFecha(ingreso.fecha_ingreso);
-                document.getElementById('info-recibido').textContent = ingreso.recibido_por;
-
-                document.getElementById('info-cliente').textContent = ingreso.cliente.nombre;
-                document.getElementById('info-celular').textContent = ingreso.cliente.celular;
-                document.getElementById('info-barrio').textContent = ingreso.cliente.barrio;
-                document.getElementById('info-referencia').textContent = ingreso.cliente.referencia;
-
-                document.getElementById('info-marca').textContent = ingreso.equipo.marca;
-                document.getElementById('info-modelo').textContent = ingreso.equipo.modelo;
-                document.getElementById('info-serial').textContent = ingreso.equipo.serial || 'Sin serial';
-                document.getElementById('info-descripcion-equipo').textContent = ingreso.equipo.descripcion_general;
-
-                document.getElementById('descripcion_dano').value = ingreso.descripcion_dano;
-                document.getElementById('estado_ingreso').value = ingreso.estado;
-                document.getElementById('paga_revision').checked = ingreso.paga_revision;
-                document.getElementById('es_garantia').checked = ingreso.es_garantia;
-                document.getElementById('btnDescargarPDF').href = `/ingresos/${ingresoId}/pdf/`;
-                const historialContainer = document.getElementById('historial-container');
-                historialContainer.innerHTML = '';
-
-                ingreso.historial.forEach(item => {
-                    const historialItem = document.createElement('div');
-                    historialItem.className = 'historial-item';
-                    historialItem.innerHTML = `
-                        <div class="historial-header">
-                            <span class="historial-fecha">${formatearFecha(item.fecha)}</span>
-                            <span class="historial-usuario">${item.realizado_por}</span>
-                        </div>
-                        <div class="historial-descripcion">${item.descripcion}</div>
-                        ${item.costo ? `<div class="historial-costo">Costo: ${formatearMoneda(item.costo)}</div>` : ''}
-                    `;
-                    historialContainer.appendChild(historialItem);
-                });
-
-                // Mostrar modal
-                document.getElementById('editModal').classList.add('show');
-            })
-            .catch(error => {
-                console.error(error);
-                alert('No se pudo cargar el ingreso.');
+            const historialContainer = document.getElementById('historial-container');
+            historialContainer.innerHTML = '';
+            ingreso.historial.forEach(item => {
+                const historialItem = document.createElement('div');
+                historialItem.className = 'historial-item';
+                historialItem.innerHTML = `
+                    <div class="historial-header">
+                        <span class="historial-fecha">${formatearFecha(item.fecha)}</span>
+                        <span class="historial-usuario">${item.realizado_por}</span>
+                    </div>
+                    <div class="historial-descripcion">${item.descripcion}</div>
+                    ${item.costo ? `<div class="historial-costo">Costo: ${formatearMoneda(item.costo)}</div>` : ''}
+                `;
+                historialContainer.appendChild(historialItem);
             });
-            
 
-        }
-
-
-        // FunciÃ³n para cerrar el modal
-        function closeModal() {
-            document.getElementById('editModal').classList.remove('show');
-            currentIngresoId = null;
-        }
-
-        // FunciÃ³n para guardar cambios
-        function saveChanges() {
-            if (!currentIngresoId) return;
-
-                const descripcion_dano = document.getElementById('descripcion_dano').value;
-                const estado = document.getElementById('estado_ingreso').value;
-                const paga_revision = document.getElementById('paga_revision').checked;
-                const es_garantia = document.getElementById('es_garantia').checked;
-
-                fetch(`/api/ingresos/${currentIngresoId}/actualizar/`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': getCookie('csrftoken')  // Necesario para POST
-                    },
-                    body: JSON.stringify({
-                        descripcion_dano,
-                        estado,
-                        paga_revision,
-                        es_garantia
-                    })
-                })
-                .then(response => {
-                    if (!response.ok) throw new Error('Error al guardar los cambios');
-                    return response.json();
-                })
-                .then(data => {
-                    const row = document.querySelector(`tr[data-id="${currentIngresoId}"]`);
-                    if (row) {
-                        const estadoCell = row.querySelector('.status');
-                        estadoCell.className = `status ${estado}`;
-                        estadoCell.textContent = getStatusText(estado);
-
-                        const garantiaCell = row.cells[5];
-                        garantiaCell.innerHTML = es_garantia
-                            ? '<span class="garantia-badge">GARANTÃA</span>'
-                            : '';
-                    }
-                    alert('Cambios guardados exitosamente');
-                    closeModal();
-                    // AquÃ­ puedes actualizar la tabla si quieres
-
-                })
-                .catch(error => {
-                    console.error(error);
-                    alert('OcurriÃ³ un error al guardar los cambios');
-                });
-        }
-        //obtener CSRF
-        function getCookie(name) {
-            let cookieValue = null;
-            if (document.cookie && document.cookie !== '') {
-                const cookies = document.cookie.split(';');
-                for (let cookie of cookies) {
-                    cookie = cookie.trim();
-                    if (cookie.startsWith(name + '=')) {
-                        cookieValue = decodeURIComponent(cookie.slice(name.length + 1));
-                        break;
-                    }
-                }
-            }
-            return cookieValue;
-        }
-
-
-        // FunciÃ³n para obtener texto del estado
-        function getStatusText(estado) {
-            const estados = {
-                'pendiente': 'Pendiente',
-                'reparacion': 'En Reparación',
-                'revisado': 'Revisado',
-                'reparado': 'Reparado',
-                'entregado': 'Entregado',
-                'devolucion': 'Devolución',
-                'garantia': 'Garantí­a'
-            };
-            return estados[estado] || estado;
-        }
-
-        // Cerrar modal al hacer clic fuera
-        window.onclick = function(event) {
-            const modal = document.getElementById('editModal');
-            if (event.target === modal) {
-                closeModal();
-            }
-        }
-
-        // Cerrar modal con tecla ESC
-        document.addEventListener('keydown', function(event) {
-            if (event.key === 'Escape') {
-                closeModal();
-            }
+            document.getElementById('editModal').classList.add('show');
+        })
+        .catch(error => {
+            console.error(error);
+            alert('No se pudo cargar el ingreso.');
         });
+}
 
-        // Filtros bÃ¡sicos
-        document.getElementById('busqueda').addEventListener('input', function() {
-            // AquÃ­ irÃ­a la lÃ³gica de filtrado
-            console.log('Filtrar por:', this.value);
-        });
+function closeModal() {
+    document.getElementById('editModal').classList.remove('show');
+    currentIngresoId = null;
+}
 
-        document.getElementById('estadoFiltro').addEventListener('change', function() {
-            // AquÃ­ irÃ­a la lÃ³gica de filtrado por estado
-            console.log('Filtrar por estado:', this.value);
+function saveChanges() {
+    if (!currentIngresoId) return;
+
+    const descripcion_dano = document.getElementById('descripcion_dano').value;
+    const estado = document.getElementById('estado_ingreso').value;
+    const paga_revision = document.getElementById('paga_revision').checked;
+    const es_garantia = document.getElementById('es_garantia').checked;
+
+    fetch(`/api/ingresos/${currentIngresoId}/actualizar/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({ descripcion_dano, estado, paga_revision, es_garantia })
+    })
+        .then(response => {
+            if (!response.ok) throw new Error('Error al guardar los cambios');
+            return response.json();
+        })
+        .then(() => {
+            buscarIngresos(paginaActual); // recarga la tabla desde el servidor, queda siempre consistente
+            alert('Cambios guardados exitosamente');
+            closeModal();
+        })
+        .catch(error => {
+            console.error(error);
+            alert('Ocurrió un error al guardar los cambios');
         });
+}
+
+// ── Búsqueda / filtros / paginación ─────────────────────────────────
+function buscarIngresos(page = 1) {
+    paginaActual = page;
+    const query  = inputBusqueda.value;
+    const estado = selectEstado.value;
+    const alerta = selectAlerta.value;
+
+    fetch(`/api/buscar-ingresos/?query=${encodeURIComponent(query)}&estado=${estado}&alerta=${alerta}&page=${page}`)
+        .then(r => r.json())
+        .then(data => { tablaBody.innerHTML = data.html; })
+        .catch(err => console.error('Error al buscar:', err));
+}
+
+inputBusqueda.addEventListener('input', () => {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => buscarIngresos(1), 350);
+});
+selectEstado.addEventListener('change', () => buscarIngresos(1));
+selectAlerta.addEventListener('change', () => buscarIngresos(1));
+
+// ── Eventos globales del modal ──────────────────────────────────────
+window.onclick = function (event) {
+    const modal = document.getElementById('editModal');
+    if (event.target === modal) closeModal();
+};
+
+document.addEventListener('keydown', function (event) {
+    if (event.key === 'Escape') closeModal();
+});
     </script>
-    <script>
-        const inputBusqueda = document.getElementById('busqueda');
-        const selectEstado = document.getElementById('estadoFiltro');
-        const tablaBody = document.getElementById('tabla-ingresos');
-        const selectAlerta = document.getElementById('alertaFiltro');
-
-        function buscarIngresos(){
-            const query = inputBusqueda.value;
-            const estado = selectEstado.value; 
-            const alerta = selectAlerta.value;
-
-            fetch(`/api/buscar-ingresos/?query=${encodeURIComponent(query)}&estado=${estado}&alerta=${alerta}`)
-                .then(response => response.json())
-                .then(data => {
-                    tablaBody.innerHTML = data.html;
-                })
-            
-        }
-        inputBusqueda.addEventListener('input', buscarIngresos);
-        selectEstado.addEventListener('change', buscarIngresos);
-        selectAlerta.addEventListener('change', buscarIngresos);
-    </script>
-    <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const tabla = document.getElementById('ingresosTable');
-        
-        tabla.addEventListener('click', function (e) {
-            let fila = e.target.closest('tr[data-id]');
-            if (fila) {
-                const ingresoId = fila.getAttribute('data-id');
-                openModal(ingresoId);
-            }
-        });
-    });
-</script>
 
 </body>
 </html>

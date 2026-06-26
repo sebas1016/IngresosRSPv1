@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Cliente, Equipo, HistorialEquipo
+from .models import Cliente, Equipo,Recibidor, HistorialEquipo
 # Register your models here.
 
 @admin.register(Cliente) #Revisar segundo video de pildoras para los filtros de busqueda
@@ -19,3 +19,9 @@ class HistorialEquipoAdmin(admin.ModelAdmin):
     list_display = ['fecha', 'descripcion', 'estado']
     list_filter = ['fecha', 'estado']
     search_fields = ['fecha', 'estado']
+
+@admin.register(Recibidor)
+class RecibidorAdmin(admin.ModelAdmin):
+    list_display = ['nombre', 'activo']
+    list_editable = ['activo']
+    search_fields = ['nombre']

@@ -15,14 +15,7 @@
         <div class="detalle-header">
             <h1 class="titulo"><a href="{%url 'inicio'%}">Ingreso #{{ ingreso.numero_ingreso }}</a></h1>
             <p>Detalle completo del ingreso</p>
-            <p><hr>
-                <h3>Generar Informe Técnico Final</h3>
-                <a href="{% url 'reporte_final' ingreso.numero_ingreso %}">
-                <button>📝 Crear informe final</button>
-                <a href="{% url 'generar_pdf_informe' ingreso.numero_ingreso %}" target="_blank">📄 Descargar Informe Técnico</a>
-
-                </a>
-            </p>
+            
         </div>
         
         <!-- Botón Volver -->

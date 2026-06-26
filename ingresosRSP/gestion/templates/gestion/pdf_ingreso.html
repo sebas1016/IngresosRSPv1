@@ -1,4 +1,4 @@
-{% load static %}
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -22,7 +22,7 @@
         left: 50%;
         width: 400px;
         height: 400px;
-        background: url("{% static 'images/logo.jpg' %}") no-repeat center center;
+        background: url("{{ logo_base64 }}") no-repeat center center;
         background-size: contain;
         transform: translate(-50%, -50%);
         opacity: 0.2;
@@ -35,9 +35,9 @@
         position: absolute;
         top: 10px;
         left: 20px;
-        width: 70px;
-        height: 70px;
-        background: url("{% static 'images/logo.jpg' %}") no-repeat center center;
+        width: 90px;
+        height: 90px;
+        background: url("{{ logo_base64 }}") no-repeat center center;
         background-size: contain;
         z-index: 1000;
     }
@@ -176,13 +176,12 @@
 </style>
 </head>
 <body>
-    <!-- Logo en esquina superior izquierda -->
-    <div class="logo-header"></div>
-
+    
     <!-- Marca de agua de texto -->
     <div class="marca-agua-texto">SERVICIO TÉCNICO RSP MEDELLÍN</div>
 
     <header>
+        <div class="logo-header"></div>
         <h1>Informe Técnico de Ingreso</h1>
         <div class="header-info">
             <p>
@@ -242,7 +241,7 @@
     {% endif %}
 
     <div class="aviso-importante">
-        <strong>⚠️ IMPORTANTE: Información de diagnóstico en 5 a 10 días hábiles</strong>
+        <strong>IMPORTANTE: Información de diagnóstico en 5 a 10 días hábiles</strong>
     </div>
 
     <footer>

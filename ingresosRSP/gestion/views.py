@@ -20,7 +20,12 @@ from datetime import timedelta
 from django.utils.dateparse import parse_date
 from django.views.decorators.http import require_http_methods
 from django.db.models.functions import TruncMonth
-
+from PIL import Image, ImageOps
+from io import BytesIO
+from django.core.files.base import ContentFile
+from django.core.paginator import Paginator
+import os
+import base64
 def generar_numero_ingreso():
     año = now().year % 100
     mes = now().month
@@ -33,6 +38,23 @@ def generar_numero_ingreso():
         return f"{base}{contador.ultimo_numero:03}"
 
 # Create your views here.
+def convertir_a_webp(imagen_file, calidad=85):
+    img = Image.open(imagen_file)
+    
+    # Corrige orientación automáticamente leyendo EXIF
+    img = ImageOps.exif_transpose(img)
+    
+    if img.mode in ('RGBA', 'P', 'LA'):
+        img = img.convert('RGBA')
+    else:
+        img = img.convert('RGB')
+    
+    buffer = BytesIO()
+    img.save(buffer, format='WEBP', quality=calidad)
+    buffer.seek(0)
+    
+    nombre_original = os.path.splitext(imagen_file.name)[0]
+    return ContentFile(buffer.read(), name=f"{nombre_original}.webp")
 
 def ingreso_equipo(request):
     if request.method == 'POST':
@@ -53,7 +75,6 @@ def ingreso_equipo(request):
                 
             )
             #Buscar o crear equipo
-            # Buscar o crear equipo
             marca = equipo_form.cleaned_data['marca']
             if marca == 'Otra':
                 marca = request.POST.get('marca_otro')
@@ -85,13 +106,19 @@ def ingreso_equipo(request):
             
                     # Guardar Imágenes del Ingreso
                     imagenes = request.FILES.getlist('imagenes')
-                    for img in imagenes:
-                        ImagenIngreso.objects.create(ingreso=ingreso, imagen=img)
+                    for i, img in enumerate(imagenes, start=1):
+                        ImagenIngreso.objects.create(
+                            ingreso=ingreso, 
+                            imagen=convertir_a_webp(img),
+                            orden=i)
 
                     #Guardar imagenes del serial
                     imagenes_serial = request.FILES.getlist('imagenes_serial')
-                    for img in imagenes_serial:
-                        ImagenSerial.objects.create(equipo=equipo, imagen=img)
+                    for i, img in enumerate(imagenes_serial, start=1):
+                        ImagenSerial.objects.create(
+                            equipo=equipo, 
+                            imagen=convertir_a_webp(img),
+                            orden=i)
                         
             except IntegrityError:
                 return HttpResponse("Error al guardar el ingreso. Intenta de nuevo.", status=500)     
@@ -132,9 +159,8 @@ def detalle_ingreso(request, numero_ingreso):
             ingreso.save()
             historial_item.save()
             
-            # Captura múltiples imágenes del input llamado "imagen"
             for img in request.FILES.getlist('imagen'):
-                ImagenHistorial.objects.create(historial=historial_item, imagen=img)
+                ImagenHistorial.objects.create(historial=historial_item, imagen=convertir_a_webp(img))
 
             return redirect('detalle_ingreso', numero_ingreso=numero_ingreso)
     else:
@@ -151,12 +177,12 @@ def detalle_ingreso(request, numero_ingreso):
     })
 
 def listar_ingresos(request):
-    estado_filtrado = request.GET.get('estado')
-    busqueda = request.GET.get('query')
+    estado_filtrado = request.GET.get('estado', '')
+    busqueda = request.GET.get('query', '')
     
     ingresos = Ingreso.objects.select_related('equipo__cliente').order_by('-fecha_ingreso')
     if estado_filtrado:
-        ingresos = Ingreso.objects.filter(estado=estado_filtrado).order_by('-fecha_ingreso')
+        ingresos = ingresos.filter(estado=estado_filtrado)
     
     if busqueda:
         ingresos = ingresos.filter(
@@ -166,11 +192,13 @@ def listar_ingresos(request):
             Q(equipo__modelo__icontains=busqueda) |
             Q(equipo__marca__icontains=busqueda)
         )
-    else:
-        ingresos = Ingreso.objects.all().order_by('-fecha_ingreso')
         
+    paginator = Paginator(ingresos, 10)  # 100 por página
+    page = request.GET.get('page')
+    ingresos_page = paginator.get_page(page)
+    
     return render(request, 'gestion/listar_ingresos.html', {
-        'ingresos': ingresos,
+        'ingresos': ingresos_page,
         'estado_filtrado':estado_filtrado,
         'busqueda':busqueda
     })
@@ -180,11 +208,16 @@ def buscar_ingresos_api(request):
     API para buscar ingresos con filtros por estado, búsqueda y alertas
     Las alertas ahora se basan en días hábiles (excluyendo fines de semana)
     """
-    busqueda = request.GET.get('query','')
-    estado = request.GET.get('estado','')
-    alerta = request.GET.get('alerta','')
+    busqueda = request.GET.get('query', '')
+    estado   = request.GET.get('estado', '')
+    alerta   = request.GET.get('alerta', '')
+    page_number = request.GET.get('page', '1')
     
-    ingresos = Ingreso.objects.select_related('equipo__cliente').order_by('-fecha_ingreso')
+    ingresos = (
+        Ingreso.objects
+        .select_related('equipo__cliente')
+        .order_by('-fecha_ingreso')
+    )
     
     #Filtro por estado
     if estado:
@@ -227,15 +260,20 @@ def buscar_ingresos_api(request):
         else:
             ingresos_filtrados=ingresos_list
     
+    paginator = Paginator(ingresos, 10)
+    page_obj  = paginator.get_page(page_number)
         
-        html = render_to_string('gestion/fragmento_tabla_ingresos.html', {
-            'ingresos':ingresos_filtrados
-            })
-    else:
-        html = render_to_string('gestion/fragmento_tabla_ingresos.html', {
-            'ingresos':ingresos
-            })
-    return JsonResponse({'html':html})  
+    html = render_to_string('gestion/fragmento_tabla_ingresos.html', {
+        'ingresos': page_obj
+    })
+    
+    return JsonResponse({
+        'html':         html,
+        'has_next':     page_obj.has_next(),
+        'has_previous': page_obj.has_previous(),
+        'number':       page_obj.number,
+        'num_pages':    paginator.num_pages,
+    })
 
 def calcular_dias_habiles_entre_fechas(fecha_inicio, fecha_fin):
     """
@@ -266,7 +304,7 @@ def ingreso_detalle_api(request, ingreso_id):
         'descripcion_dano': ingreso.descripcion_dano,
         'paga_revision': ingreso.paga_revision,
         'estado': ingreso.estado,
-        'recibido_por': ingreso.get_recibido_por_display(),
+        'recibido_por': str(ingreso.recibido_por) if ingreso.recibido_por else None,
         'es_garantia': ingreso.estado == 'garantia',
         'cliente': {
             'nombre': ingreso.equipo.cliente.nombre,
@@ -305,105 +343,89 @@ def actualizar_ingreso_api(request, ingreso_id):
     ingreso.es_garantia = data.get('es_garantia', False)
     ingreso.save()
 
+    HistorialEquipo.objects.create(
+        ingreso=ingreso,
+        descripcion=f"Estado: {ingreso.estado}",
+        estado=ingreso.estado
+    )
+    
     return JsonResponse({'success': True})
 
 
 def inicio(request):
     return render(request, 'gestion/inicio.html')
 
-#Reporte Tecnico (PDF)
-def reporte_final(request, numero_ingreso):
-    ingreso = get_object_or_404(Ingreso, numero_ingreso=numero_ingreso)
-    equipo = ingreso.equipo
-    cliente = equipo.cliente
     
-    if request.method == "POST":
-        form = InformeTecnicoForm(request.POST)
-        if form.is_valid():
-            historial = form.save(commit=False)
-            historial.ingreso = ingreso
-            historial.realizado_por = request.user
-            #historial.estado = ingreso.estado
-            historial.save()
-            
-            #actualizar estado del ingreso con el nuevo estado final
-            
-            if historial.es_reporte_final:
-                ingreso.estado = 'entregado'
-                ingreso.save()
-            return redirect('detalle_ingreso', numero_ingreso=numero_ingreso)
-    else:
-        form = InformeTecnicoForm()
-    
-    return render(request, 'gestion/reporte_final.html', {
-        'ingreso': ingreso,
-        'equipo': equipo,
-        'cliente': cliente,
-        'form': form,
-    })
+def image_to_base64(path):
+    """Para logo/QR: lee la imagen del disco tal cual, sin redimensionar."""
+    try:
+        with open(path, 'rb') as f:
+            encoded = base64.b64encode(f.read()).decode('utf-8')
+        ext = path.split('.')[-1].lower()
+        mime = 'jpeg' if ext in ('jpg', 'jpeg') else ext
+        return f"data:image/{mime};base64,{encoded}"
+    except FileNotFoundError:
+        return ''
 
-def generar_pdf_informe(request, numero_ingreso):
-    ingreso = get_object_or_404(Ingreso, numero_ingreso=numero_ingreso)
-    historial_final = HistorialEquipo.objects.filter(ingreso=ingreso, es_reporte_final=True).last()
-    
-    if not historial_final:
-        return HttpResponse("No se encontró un informe técnico final para este ingreso", status=404)
-    
-    html_string = render_to_string('gestion/informe_pdf.html', {
-        'ingreso': ingreso,
-        'cliente': ingreso.equipo.cliente,
-        'equipo': ingreso.equipo,
-        'historial': historial_final,
-    })
-    
-    pdf_file = HTML(string=html_string).write_pdf()
-    
-    response = HttpResponse(pdf_file, content_type='application/pdf')
-    response['Content-Disposition'] = f'attachment; filename=informe_ingreso_{numero_ingreso}.pdf'
-    return response
-    
+
+def imagen_a_base64_redimensionada(imagen_field, max_width=700):
+    """Para fotos de usuario (ingreso/serial): lee del disco y redimensiona,
+    porque en el PDF se muestran como miniaturas de 100x100px — no tiene
+    sentido embeber la foto completa de la cámara."""
+    if not imagen_field:
+        return ''
+    try:
+        path = imagen_field.path
+    except (ValueError, NotImplementedError):
+        return ''
+    try:
+        with Image.open(path) as img:
+            fmt = img.format or 'WEBP'
+            if img.width > max_width:
+                ratio = max_width / img.width
+                img = img.resize((max_width, int(img.height * ratio)), Image.LANCZOS)
+            buffer = BytesIO()
+            img.save(buffer, format=fmt, quality=80)
+            encoded = base64.b64encode(buffer.getvalue()).decode('utf-8')
+            return f"data:image/{fmt.lower()};base64,{encoded}"
+    except FileNotFoundError:
+        return ''
+
+
 def generar_pdf_ingreso(request, ingreso_id):
-    from pathlib import Path
-    ingreso = get_object_or_404(Ingreso, id=ingreso_id)
+    ingreso = get_object_or_404(
+        Ingreso.objects.select_related('equipo__cliente', 'recibido_por'),
+        id=ingreso_id
+    )
     equipo = ingreso.equipo
     cliente = equipo.cliente
-    imagenes = ImagenIngreso.objects.filter(ingreso=ingreso)
-    
-    imagenes_rutas = []
-    for img in ingreso.imagenes.all():
-        ruta_absoluta = Path(settings.MEDIA_ROOT) / img.imagen.name
-        ruta_uri = request.build_absolute_uri(img.imagen.url)  # file:///C:/...
-        print(ruta_uri)
-        imagenes_rutas.append({
-                'ruta': ruta_uri,
-                'descripcion': img.descripcion,
-        })
-    
-    imagenes_serial = ImagenSerial.objects.filter(equipo=equipo)
-    imagenes_serial_rutas = []
-    for img in imagenes_serial:
-        ruta_uri = request.build_absolute_uri(img.imagen.url)
-        print(ruta_uri)
-        imagenes_serial_rutas.append({
-            'ruta': ruta_uri,
-        })
-       
-    # Renderizar PDF desde template
+    recibido_por = ingreso.recibido_por
+
+    imagenes_rutas = [
+        {'ruta': imagen_a_base64_redimensionada(img.imagen)}
+        for img in ingreso.imagenes.all().order_by('orden')
+    ]
+
+    imagenes_serial_rutas = [
+        {'ruta': imagen_a_base64_redimensionada(img.imagen)}
+        for img in ImagenSerial.objects.filter(equipo=equipo).order_by('orden')
+    ]
+
+    base_img = os.path.join(settings.BASE_DIR, 'gestion', 'static', 'images')
+
     html = render_to_string('gestion/pdf_ingreso.html', {
         'ingreso': ingreso,
+        'recibido_por': recibido_por,
         'cliente': cliente,
         'equipo': equipo,
         'imagenes': imagenes_rutas,
         'imagenes_serial': imagenes_serial_rutas,
+        'logo_base64': image_to_base64(os.path.join(base_img, 'logo.jpg')),
         
-     })
+    })
 
-     # Establecer base_url correctamente
-    base_url = request.build_absolute_uri('/')
+    pdf_file = HTML(string=html).write_pdf()
 
-    pdf_file = HTML(string=html, base_url=base_url).write_pdf()
-
-    # Respuesta con PDF descargable
     response = HttpResponse(pdf_file, content_type='application/pdf')
     response['Content-Disposition'] = f'attachment; filename=ingreso_{ingreso.numero_ingreso}.pdf'
     return response
