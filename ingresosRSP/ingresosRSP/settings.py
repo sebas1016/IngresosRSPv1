@@ -49,7 +49,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-   
+
 ]
 
 ROOT_URLCONF = 'ingresosRSP.urls'
@@ -78,9 +78,9 @@ WSGI_APPLICATION = 'ingresosRSP.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'RSPingresos',
-        'USER': 'postgres',
-        'PASSWORD': '123456',
+        'NAME': 'ingresosdb',
+        'USER': 'ingresosuser',
+        'PASSWORD': '1234',
         'HOST': 'localhost',
         'PORT': '5432',
 
@@ -112,7 +112,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
-LANGUAGE_CODE = 'es-co'  # o 'es'
+LANGUAGE_CODE = 'es-co'
 
 TIME_ZONE = 'America/Bogota'
 
@@ -139,7 +139,6 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 
 AUTHENTICATION_BACKENDS = (
-   
     'django.contrib.auth.backends.ModelBackend',
 )
 
