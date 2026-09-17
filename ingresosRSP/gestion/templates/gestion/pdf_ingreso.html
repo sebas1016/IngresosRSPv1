@@ -187,7 +187,7 @@
             <p>
                 <strong>Número de Ingreso:</strong>
                 <span class="numero-ingreso">#{{ ingreso.numero_ingreso }}</span>
-                <strong>| Fecha de Ingreso:</strong> {{ ingreso.fecha_ingreso|date:"d/m/Y H:i" }}
+                <strong>| Fecha de Ingreso:</strong> {{ ingreso.fecha_ingreso|date:"d/m/Y" }}
             </p>
             <p>
                 <strong>Recibido por:</strong> {{ ingreso.get_recibido_por_display }}

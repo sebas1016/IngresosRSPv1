@@ -6,7 +6,7 @@
             {% if ingreso.requiere_alerta %}
                 <span class="alerta-badge {{ ingreso.nivel_alerta }}" 
                       title="{{ ingreso.obtener_mensaje_alerta }} (solo días hábiles)">
-                    <span class="alerta-icon">⚠</span>
+                    <span class="alerta-icon"></span>
                     <span class="dias-badge">{{ ingreso.dias_en_taller }}d</span>
                 </span>
             {% endif %}
