@@ -112,8 +112,12 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
+<<<<<<< HEAD
 
 LANGUAGE_CODE = 'es-co' 
+=======
+LANGUAGE_CODE = 'es-co'
+>>>>>>> 5f401bcf9d39ab3cfb2e58cc98f60d955fe5ea71
 
 TIME_ZONE = 'America/Bogota'
 
@@ -140,7 +144,11 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 
 AUTHENTICATION_BACKENDS = (
+<<<<<<< HEAD
       'django.contrib.auth.backends.ModelBackend',
+=======
+    'django.contrib.auth.backends.ModelBackend',
+>>>>>>> 5f401bcf9d39ab3cfb2e58cc98f60d955fe5ea71
 )
 
 

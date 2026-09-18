@@ -173,6 +173,17 @@
         font-weight: bold;
         font-size: 16px;
     }
+    .pagina-terminos {
+    page-break-before: always;
+    text-align: center;
+    margin-top: 0;
+    }
+
+    .pagina-terminos img {
+        width: 100%;
+        max-width: 100%;
+        height: auto;
+    }
 </style>
 </head>
 <body>
@@ -243,7 +254,11 @@
     <div class="aviso-importante">
         <strong>IMPORTANTE: Información de diagnóstico en 5 a 10 días hábiles</strong>
     </div>
-
+    {% if terminos_base64 %}
+        <div class="pagina-terminos">
+        <img src="{{ terminos_base64 }}" alt="Términos y condiciones">
+        </div>
+    {% endif %}
     <footer>
        <p>&copy; Generado automáticamente por el sistema de gestión del taller.</p>
        <p>Fecha de generación: {% now "d/m/Y H:i" %}</p>

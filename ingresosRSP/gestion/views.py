@@ -421,6 +421,7 @@ def generar_pdf_ingreso(request, ingreso_id):
         'imagenes': imagenes_rutas,
         'imagenes_serial': imagenes_serial_rutas,
         'logo_base64': image_to_base64(os.path.join(base_img, 'logo.jpg')),
+        'terminos_base64': image_to_base64(os.path.join(base_img, 'terminos_y_condiciones.jpeg')),
         
     })
 
